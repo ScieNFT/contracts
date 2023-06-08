@@ -1,0 +1,11 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "js/ts.implicitProjectConfig.experimentalDecorators": true,
+
+  "protoc": {
+    "compile_on_save": false,
+    "path": "/opt/homebrew/bin/protoc",
+    "options": ["--proto_path=src/"]
+  }
+}

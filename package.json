@@ -1,0 +1,79 @@
+{
+  "name": "scienft",
+  "version": "1.0.0",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "build": "npx hardhat clean && npx hardhat compile",
+    "test": "npx hardhat compile && npx hardhat test",
+    "coverage": "npx hardhat coverage",
+    "start": "npx hardhat node",
+    "deploy:local": "npx hardhat run --network localhost scripts/deployment/deployAll.ts",
+    "deploy:fuji": "npx hardhat run --network fuji scripts/deployment/deployAll.ts",
+    "typechain": "npx hardhat typechain",
+    "format": "prettier --write .",
+    "docgen": "npx hardhat docgen",
+    "ncu": "npx npm-check-updates -u",
+    "metrics": "npx solidity-code-metrics ./contracts/*.sol --html > metrics.html"
+  },
+  "description": "ScieNFT contract development",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ScieNFT/contracts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ScieNFT/contracts/issues"
+  },
+  "homepage": "https://github.com/ScieNFT/contracts#readme",
+  "devDependencies": {
+    "@babel/core": "^7.21.8",
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/bytes": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
+    "@ethersproject/strings": "^5.7.0",
+    "@istanbuljs/nyc-config-typescript": "^1.0.2",
+    "@narya-ai/contracts": "^0.4.0",
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "@typechain/ethers-v5": "^10.2.1",
+    "@typechain/hardhat": "^6.1.6",
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.2.1",
+    "avalanche": "^3.15.5",
+    "babel-jest": "^29.5.0",
+    "chai": "^4.3.7",
+    "esm": "^3.2.25",
+    "ethers": "5",
+    "hardhat-ethers": "^1.0.1",
+    "hardhat-gas-reporter": "^1.0.9",
+    "jest": "^29.5.0",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
+    "prettier": "^2.8.8",
+    "prettier-plugin-solidity": "^1.1.3",
+    "solhint": "^3.4.1",
+    "solidity-coverage": "^0.8.2",
+    "solidity-metrics": "^0.0.5",
+    "ts-generator": "^0.1.1",
+    "ts-jest": "^29.1.0",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@openzeppelin/contracts": "^4.8.3",
+    "dotenv": "^16.0.3",
+    "hardhat": "^2.14.0",
+    "hardhat-abi-exporter": "^2.10.1",
+    "hardhat-docgen": "^1.3.0",
+    "reflect-metadata": "^0.1.13",
+    "typechain": "^8.1.1"
+  }
+}

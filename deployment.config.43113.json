@@ -1,0 +1,7 @@
+{
+  "tokensAddress": "0xE74b7850baeeCB355cFcFa3017109dBbd0f4B2AE",
+  "offersAddress": "0xF4B892e3c243c468D1A1fffBD7D94fd8ad2Fa656",
+  "listingsAddress": "0xFFABd47EB064b029f38c38Fa8022094D16DbE382",
+  "chainId": 43113,
+  "url": "https://api.avax-test.network/ext/bc/C/rpc"
+}
