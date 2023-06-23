@@ -19,9 +19,6 @@ echo "Started full test at $start_time" | tee -a output.txt
 echo "Running yarn install" | tee -a output.txt
 yarn install
 
-echo "Running yarn run format" | tee -a output.txt
-yarn run format
-
 echo "Running yarn run coverage (solidity)" | tee -a output.txt
 yarn run coverage
 
@@ -43,7 +40,6 @@ echo "deployment script pid is $deploy_pid" | tee -a output.txt
 echo "waiting for mining operations to complete"
 sleep 30
 
-
 echo "Killing background processes" | tee -a output.txt
 echo "killing hardhat EVM at $start_pid" | tee -a output.txt
 kill -9 $start_pid 
@@ -61,3 +57,12 @@ if [[ -n $process_id ]]; then
   kill $process_id
   echo "Killed hardhat EVM" | tee -a output.txt
 fi
+
+echo "Running yarn run format" | tee -a output.txt
+yarn run format
+
+echo "Running yarn run docgen" | tee -a output.txt
+yarn run docgen
+
+echo "Running yarn run metrics" | tee -a output.txt
+yarn run metrics
