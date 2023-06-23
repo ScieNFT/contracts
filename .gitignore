@@ -27,3 +27,4 @@ reports
 pnm-cov.json
 .DS_Store
 output.txt
+deployment.config.31337.json
