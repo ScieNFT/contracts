@@ -54,7 +54,7 @@ contract Tokens is
     bytes32 public constant BRIDGE_ROLE = keccak256("TOKENS_BRIDGE");
 
     /// @dev Index of the SCI fungible token
-    uint64 public constant SCI = 0;
+    uint8 public constant SCI = 0;
     /// @dev NFTs are indexed as [FIRST_NFT...]
     uint8 public constant FIRST_NFT = 1;
 
@@ -192,7 +192,7 @@ contract Tokens is
             "ERC1155: caller is not token owner or approved"
         );
         uint64 tokenId = uint64(id);
-        if (tokenId >= FIRST_NFT) {
+        if (tokenId >= uint64(FIRST_NFT)) {
             require(isMinted(tokenId), "Invalid NFT");
             require(!isBridged(tokenId), "NFT is bridged");
             ownerOf[tokenId] = to;
@@ -201,7 +201,7 @@ contract Tokens is
         // This function allows arbitrary code execution, opening us to possible reentrancy attacks
         _safeTransferFrom(from, to, tokenId, amount, data);
 
-        if (tokenId >= FIRST_NFT) {
+        if (tokenId >= uint64(FIRST_NFT)) {
             emitNFTUpdated(tokenId);
         }
     }
@@ -228,7 +228,7 @@ contract Tokens is
 
         for (uint256 i = 0; i < ids.length; i++) {
             uint64 tokenId = uint64(ids[i]);
-            if (tokenId >= FIRST_NFT) {
+            if (tokenId >= uint64(FIRST_NFT)) {
                 require(isMinted(tokenId), "Invalid NFT");
                 require(!isBridged(tokenId), "NFT is bridged");
                 ownerOf[tokenId] = to;
@@ -241,7 +241,7 @@ contract Tokens is
 
         for (uint256 i = 0; i < ids.length; i++) {
             uint64 tokenId = uint64(ids[i]);
-            if (tokenId >= FIRST_NFT) {
+            if (tokenId >= uint64(FIRST_NFT)) {
                 emitNFTUpdated(tokenId);
             }
         }
@@ -349,7 +349,7 @@ contract Tokens is
             }
         }
 
-        _mint(to, SCI, yield, bytes(""));
+        _mint(to, uint256(SCI), yield, bytes(""));
     }
 
     /**
@@ -878,7 +878,7 @@ contract Tokens is
     /**
      * @dev Returns the name of the token.
      */
-    function name() public view virtual returns (string memory) {
+    function name() public view virtual override returns (string memory) {
         return _name;
     }
 
@@ -886,7 +886,7 @@ contract Tokens is
      * @dev Returns the symbol of the token, usually a shorter version of the
      * name.
      */
-    function symbol() public view virtual returns (string memory) {
+    function symbol() public view virtual override returns (string memory) {
         return _symbol;
     }
 
@@ -903,22 +903,24 @@ contract Tokens is
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    function decimals() public view virtual returns (uint8) {
+    function decimals() public view virtual override returns (uint8) {
         return 18;
     }
 
     /**
      * @dev See {IERC20-totalSupply}.
      */
-    function totalSupply() public view virtual returns (uint256) {
+    function totalSupply() public view virtual override returns (uint256) {
         return _totalSupply;
     }
 
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account) public view virtual returns (uint256) {
-        return balanceOf(account, SCI);
+    function balanceOf(
+        address account
+    ) public view virtual override returns (uint256) {
+        return balanceOf(account, uint256(SCI));
     }
 
     /**
@@ -932,7 +934,7 @@ contract Tokens is
     function transfer(
         address to,
         uint256 amount
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         address owner = msg.sender;
         _transfer(owner, to, amount);
         return true;
@@ -944,7 +946,7 @@ contract Tokens is
     function allowance(
         address owner,
         address spender
-    ) public view virtual returns (uint256) {
+    ) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -961,7 +963,7 @@ contract Tokens is
     function approve(
         address spender,
         uint256 amount
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         address owner = msg.sender;
         _approve(owner, spender, amount);
         return true;
@@ -987,7 +989,7 @@ contract Tokens is
         address from,
         address to,
         uint256 amount
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         address spender = msg.sender;
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
@@ -1022,9 +1024,9 @@ contract Tokens is
         );
 
         unchecked {
-            _balances[SCI][from] = fromBalance - amount;
+            _balances[uint64(SCI)][from] = fromBalance - amount;
         }
-        _balances[SCI][to] += amount;
+        _balances[uint64(SCI)][to] += amount;
 
         emit Transfer(from, to, amount);
     }
@@ -1041,11 +1043,11 @@ contract Tokens is
      * - sender must have at least `amount` tokens.
      */
     function burn(uint256 amount) external {
-        uint256 accountBalance = balanceOf(msg.sender, SCI);
+        uint256 accountBalance = balanceOf(msg.sender);
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
         unchecked {
             _totalSupply -= amount;
-            _balances[SCI][msg.sender] = accountBalance - amount;
+            _balances[uint64(SCI)][msg.sender] = accountBalance - amount;
         }
         emit Transfer(msg.sender, address(0), amount);
     }
