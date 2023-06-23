@@ -1,8 +1,8 @@
-import type { Tokens as Tokens__contract } from "../../types/contracts/Tokens";
-import type { Offers as Offers__contract } from "../../types/contracts/Offers";
-import type { Listings as Listings__contract } from "../../types/contracts/Listings";
-import hre from "hardhat";
-import { Wallet } from "ethers";
+import type { Tokens as Tokens__contract } from '../../types/contracts/Tokens';
+import type { Offers as Offers__contract } from '../../types/contracts/Offers';
+import type { Listings as Listings__contract } from '../../types/contracts/Listings';
+import hre from 'hardhat';
+import { Wallet } from 'ethers';
 
 export class Contracts {
   static tokens: Tokens__contract;
@@ -21,10 +21,7 @@ export class Nonce {
   static CFO_NONCE: number;
 
   public static async resetCEONonce() {
-    let next = await Signers.CEO.provider.getTransactionCount(
-      Signers.CEO.address,
-      "pending"
-    );
+    let next = await Signers.CEO.provider.getTransactionCount(Signers.CEO.address, 'pending');
     Nonce.CEO_NONCE = next;
     console.log(`[NONCE] set first CEO nonce to ${Nonce.CEO_NONCE}`);
   }
@@ -40,10 +37,7 @@ export class Nonce {
   }
 
   public static async resetCFONonce() {
-    let next = await Signers.CFO.provider.getTransactionCount(
-      Signers.CFO.address,
-      "pending"
-    );
+    let next = await Signers.CFO.provider.getTransactionCount(Signers.CFO.address, 'pending');
     Nonce.CFO_NONCE = next;
     console.log(`[NONCE] set first CFO nonce to ${Nonce.CFO_NONCE}`);
   }
