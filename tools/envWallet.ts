@@ -1,9 +1,9 @@
-import { Mnemonic } from "avalanche";
-import { ethers } from "ethers";
-import { join } from "path";
+import { Mnemonic } from 'avalanche';
+import { ethers } from 'ethers';
+import { join } from 'path';
 
-import * as dotenv from "dotenv";
-dotenv.config({ path: join(__dirname, "../.env") });
+import * as dotenv from 'dotenv';
+dotenv.config({ path: join(__dirname, '../.env') });
 
 /*
  *
@@ -17,7 +17,7 @@ console.log(m);
 console.log(process.env.METADATA_JSON_URI);
 
 if (!m) {
-  throw new Error("Please set your DEPLOYING_MNEMONIC in a .env file");
+  throw new Error('Please set your DEPLOYING_MNEMONIC in a .env file');
 }
 
 const mnemonic: Mnemonic = Mnemonic.getInstance();

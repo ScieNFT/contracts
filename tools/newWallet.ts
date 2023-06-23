@@ -1,6 +1,6 @@
-import { randomBytes } from "crypto";
-import { Mnemonic } from "avalanche";
-import { ethers } from "ethers";
+import { randomBytes } from 'crypto';
+import { Mnemonic } from 'avalanche';
+import { ethers } from 'ethers';
 
 /*
  *
@@ -10,7 +10,7 @@ import { ethers } from "ethers";
 
 const mnemonic: Mnemonic = Mnemonic.getInstance();
 const strength: number = 256;
-const wordlist = mnemonic.getWordlists("english") as string[];
+const wordlist = mnemonic.getWordlists('english') as string[];
 //@ts-ignore
 let m = mnemonic.generateMnemonic(strength, randomBytes, wordlist);
 let k = mnemonic.mnemonicToEntropy(m);
