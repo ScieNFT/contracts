@@ -1,19 +1,19 @@
-import { expect } from "chai";
-import { keccak256 } from "@ethersproject/keccak256";
-import { toUtf8Bytes } from "@ethersproject/strings";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from 'chai';
+import { keccak256 } from '@ethersproject/keccak256';
+import { toUtf8Bytes } from '@ethersproject/strings';
+import { time } from '@nomicfoundation/hardhat-network-helpers';
 // @ts-ignore
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 
-import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { deployListingsFixture } from "./Listings.fixture";
-import { randomBytes } from "crypto";
-import { BigNumber, Event } from "ethers";
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { deployListingsFixture } from './Listings.fixture';
+import { randomBytes } from 'crypto';
+import { BigNumber, Event } from 'ethers';
 
 // arbitrary HASH values
-const DATA_HASH = keccak256(toUtf8Bytes("DATA_HASH"));
+const DATA_HASH = keccak256(toUtf8Bytes('DATA_HASH'));
 
 function calculatedPriceSlopeNumerator(
   startTimeSec: number,
@@ -25,7 +25,7 @@ function calculatedPriceSlopeNumerator(
     return BigNumber.from(0);
   }
   if (endTimeSec < startTimeSec) {
-    throw "endTimeSec < startTimeSec";
+    throw 'endTimeSec < startTimeSec';
   }
   let priceDifference: BigNumber;
   if (endPriceAttoSci.gt(startPriceAttoSci)) {
@@ -40,19 +40,10 @@ function calculatedPriceSlopeNumerator(
   return slopeNumerator;
 }
 
-describe("Listings Contract", function () {
+describe('Listings Contract', function () {
   beforeEach(async function () {
-    const {
-      CEO,
-      CFO,
-      SUPERADMIN,
-      OWNER,
-      BRIDGE,
-      ANYONE,
-      EVERYONE,
-      tokens,
-      listings,
-    } = await loadFixture(deployListingsFixture);
+    const { CEO, CFO, SUPERADMIN, OWNER, BRIDGE, ANYONE, EVERYONE, tokens, listings } =
+      await loadFixture(deployListingsFixture);
     this.tokens = tokens;
     this.listings = listings;
     this.CEO = CEO;
@@ -102,10 +93,9 @@ describe("Listings Contract", function () {
       new ethers.Contract(listings.address, listings.interface, signer);
 
     this.balanceSCI = (s: SignerWithAddress): Promise<number> =>
-      this.tokens["balanceOf(address,uint256)"](
-        s.address,
-        this.tokens.SCI()
-      ).then((b: BigNumber) => b.toNumber());
+      this.tokens['balanceOf(address,uint256)'](s.address, this.tokens.SCI()).then((b: BigNumber) =>
+        b.toNumber()
+      );
 
     this.creditSCI = async (s: SignerWithAddress, amount: bigint) => {
       let feeAttoSci = BigNumber.from(12345);
@@ -119,12 +109,10 @@ describe("Listings Contract", function () {
       }
 
       let lastTime = BigNumber.from(await time.latest());
-      let interval = BigNumber.from(
-        await this.tokensAs(this.CFO).miningIntervalSeconds()
-      );
-      await ethers.provider.send("evm_mine");
+      let interval = BigNumber.from(await this.tokensAs(this.CFO).miningIntervalSeconds());
+      await ethers.provider.send('evm_mine');
       await time.setNextBlockTimestamp(lastTime.add(interval).add(1));
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
 
       await this.tokens.mineSCI(solution, this.CFO.address, {
         value: feeAttoSci.toString(),
@@ -132,19 +120,16 @@ describe("Listings Contract", function () {
       await this.tokensAs(this.CFO).transfer(s.address, amount);
     };
 
-    this.balanceNFT = (
-      s: SignerWithAddress,
-      tokenId: number
-    ): Promise<number> =>
-      this.tokens["balanceOf(address,uint256)"](s.address, tokenId).then(
-        (b: BigNumber) => b.toNumber()
+    this.balanceNFT = (s: SignerWithAddress, tokenId: number): Promise<number> =>
+      this.tokens['balanceOf(address,uint256)'](s.address, tokenId).then((b: BigNumber) =>
+        b.toNumber()
       );
 
     let _nextNFTIndex: number = await this.tokens.FIRST_NFT();
     this.mintNextNFT = (s = OWNER): Promise<number> =>
       this.tokens.mintingFee().then((fee: BigNumber) => {
         return this.tokensAs(s)
-          ["mintNFT(bytes32)"](DATA_HASH, {
+          ['mintNFT(bytes32)'](DATA_HASH, {
             value: fee.toString(),
           })
           .then((_: any) => {
@@ -163,21 +148,18 @@ describe("Listings Contract", function () {
       tokenId: number,
       options: ListNFTOptions = {
         // Set default value for options
-        startPriceAttoSci: "1000",
-        endPriceAttoSci: "0",
+        startPriceAttoSci: '1000',
+        endPriceAttoSci: '0',
         durationSec: -1, // using a negative value to force endTimeSec == 0
       },
       operator = OWNER,
       seller = OWNER
     ): Promise<typeof this.listings.Listing> => {
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
       let startTimeSec = (await time.latest()) + 1; // advance block
-      let endTimeSec =
-        options.durationSec > 0 ? startTimeSec + options.durationSec : 0;
+      let endTimeSec = options.durationSec > 0 ? startTimeSec + options.durationSec : 0;
       let endPriceAttoSci: BigNumber = BigNumber.from(options.endPriceAttoSci);
-      let startPriceAttoSci: BigNumber = BigNumber.from(
-        options.startPriceAttoSci
-      );
+      let startPriceAttoSci: BigNumber = BigNumber.from(options.startPriceAttoSci);
       let priceIncreases = endPriceAttoSci.gt(startPriceAttoSci);
       let priceSlopeNumerator = calculatedPriceSlopeNumerator(
         startTimeSec,
@@ -186,12 +168,9 @@ describe("Listings Contract", function () {
         endPriceAttoSci
       );
       await time.setNextBlockTimestamp(startTimeSec);
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
 
-      let fee =
-        operator.address == this.SUPERADMIN.address
-          ? 0
-          : await this.listings.listingFee();
+      let fee = operator.address == this.SUPERADMIN.address ? 0 : await this.listings.listingFee();
       await this.listingsAs(operator).setListing(
         tokenId,
         seller.address,
@@ -214,59 +193,41 @@ describe("Listings Contract", function () {
     };
   });
 
-  describe("Deployment", function () {
-    it("should connect to the Tokens contract", async function () {
+  describe('Deployment', function () {
+    it('should connect to the Tokens contract', async function () {
       let tokensAddress = await this.listings.tokens();
       expect(tokensAddress).to.equal(this.tokens.address);
-      expect(
-        await this.tokens.hasRole(
-          await this.tokens.MARKETPLACE_ROLE(),
-          this.listings.address
-        )
-      ).to.be.true;
+      expect(await this.tokens.hasRole(await this.tokens.MARKETPLACE_ROLE(), this.listings.address))
+        .to.be.true;
     });
 
-    it("should set parameters to values in env", async function () {
-      let envListingFee: string | undefined =
-        process.env.DEFAULT_LISTING_FEE_GAS;
+    it('should set parameters to values in env', async function () {
+      let envListingFee: string | undefined = process.env.DEFAULT_LISTING_FEE_GAS;
       const listingFee: number = envListingFee ? parseInt(envListingFee) : 0;
       expect(await this.listings.listingFee()).to.be.equal(listingFee);
 
-      let envRoyaltyNumerator: string | undefined =
-        process.env.DEFAULT_ROYALTY_NUMERATOR;
-      const royaltyNumerator: number = envRoyaltyNumerator
-        ? parseInt(envRoyaltyNumerator)
-        : 0;
-      expect(await this.listings.royaltyNumerator()).to.be.equal(
-        royaltyNumerator
-      );
+      let envRoyaltyNumerator: string | undefined = process.env.DEFAULT_ROYALTY_NUMERATOR;
+      const royaltyNumerator: number = envRoyaltyNumerator ? parseInt(envRoyaltyNumerator) : 0;
+      expect(await this.listings.royaltyNumerator()).to.be.equal(royaltyNumerator);
     });
 
-    it("should have the CEO_ROLE value match the AccessControl default of 0x0", async function () {
+    it('should have the CEO_ROLE value match the AccessControl default of 0x0', async function () {
       expect(await this.listings.CEO_ROLE()).to.equal(
-        "0x0000000000000000000000000000000000000000000000000000000000000000"
+        '0x0000000000000000000000000000000000000000000000000000000000000000'
       );
     });
 
-    it("should grant the CEO role to contract deployment sender", async function () {
-      expect(
-        await this.listings.hasRole(
-          await this.listings.CEO_ROLE(),
-          this.CEO.address
-        )
-      ).to.be.true;
+    it('should grant the CEO role to contract deployment sender', async function () {
+      expect(await this.listings.hasRole(await this.listings.CEO_ROLE(), this.CEO.address)).to.be
+        .true;
     });
 
-    it("should grant the CFO role in the fixture", async function () {
-      expect(
-        await this.listings.hasRole(
-          await this.listings.CFO_ROLE(),
-          this.CFO.address
-        )
-      ).to.be.true;
+    it('should grant the CFO role in the fixture', async function () {
+      expect(await this.listings.hasRole(await this.listings.CFO_ROLE(), this.CFO.address)).to.be
+        .true;
     });
 
-    it("should support all expected ERC165 interfaces", async function () {
+    it('should support all expected ERC165 interfaces', async function () {
       function toBytes4(s: string) {
         var b4 = new Uint8Array(4);
         for (var i = 0; i < 4; i++) {
@@ -274,56 +235,48 @@ describe("Listings Contract", function () {
         }
         return b4;
       }
-      const IID_IACCESS_CONTROL = toBytes4("7965db0b"); // type(IAccessControl).interfaceId
-      const IID_IERC1155_RECEIVER = toBytes4("4e2312e0"); // type(IERC1155Receiver).interfaceId;
-      const IID_IERC165 = toBytes4("01ffc9a7"); // type(IERC165).interfaceId
-      expect(await this.listings.supportsInterface(IID_IACCESS_CONTROL)).to.be
-        .true;
-      expect(await this.listings.supportsInterface(IID_IERC1155_RECEIVER)).to.be
-        .true;
+      const IID_IACCESS_CONTROL = toBytes4('7965db0b'); // type(IAccessControl).interfaceId
+      const IID_IERC1155_RECEIVER = toBytes4('4e2312e0'); // type(IERC1155Receiver).interfaceId;
+      const IID_IERC165 = toBytes4('01ffc9a7'); // type(IERC165).interfaceId
+      expect(await this.listings.supportsInterface(IID_IACCESS_CONTROL)).to.be.true;
+      expect(await this.listings.supportsInterface(IID_IERC1155_RECEIVER)).to.be.true;
       expect(await this.listings.supportsInterface(IID_IERC165)).to.be.true;
     });
 
-    it("should revert transfers of gas tokens to contract address", async function () {
+    it('should revert transfers of gas tokens to contract address', async function () {
       await this.toRevert(async () => {
         await this.CEO.sendTransaction({
           to: this.listings.address,
           value: 100,
         });
-      }, "receive() reverts");
+      }, 'receive() reverts');
     });
 
-    it("should revert on fallback", async function () {
-      const nonExistentFuncSignature = "nonExistentFunc(uint256,uint256)";
+    it('should revert on fallback', async function () {
+      const nonExistentFuncSignature = 'nonExistentFunc(uint256,uint256)';
       const fakeDemoContract = new ethers.Contract(
         this.listings.address,
-        [
-          ...this.listings.interface.fragments,
-          `function ${nonExistentFuncSignature}`,
-        ],
+        [...this.listings.interface.fragments, `function ${nonExistentFuncSignature}`],
         this.CEO
       );
       await this.toRevert(async () => {
         await fakeDemoContract[nonExistentFuncSignature](8, 9);
-      }, "fallback() reverts");
+      }, 'fallback() reverts');
     });
   });
 
-  describe("new setListing", function () {
-    it("should revert for offchain NFT", async function () {
+  describe('new setListing', function () {
+    it('should revert for offchain NFT', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).withdrawFromContract(
-        tokenId,
-        this.BRIDGE.address
-      );
+      await this.tokensAs(this.OWNER).withdrawFromContract(tokenId, this.BRIDGE.address);
       expect(await this.tokens.isBridged(tokenId)).to.equal(true);
 
       await this.toRevert(async () => {
         await this.listNFT(tokenId);
-      }, "NFT is bridged");
+      }, 'NFT is bridged');
     });
 
-    it("should create a listing with endTimeSec > block.timestamp", async function () {
+    it('should create a listing with endTimeSec > block.timestamp', async function () {
       // mint a few NFTs and list the last one
       let tokenId = await this.mintNextNFT();
       tokenId = await this.mintNextNFT();
@@ -331,13 +284,8 @@ describe("Listings Contract", function () {
       tokenId = await this.mintNextNFT();
 
       //TODO: custom limited approval code for SCI and NFTs
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
-      let providedListing: typeof this.listings.Listing = await this.listNFT(
-        tokenId
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
+      let providedListing: typeof this.listings.Listing = await this.listNFT(tokenId);
 
       expect(await this.tokens.isFullBenefit(tokenId)).to.true;
       expect(await this.tokens.willUnsetFullBenefit(tokenId)).to.true;
@@ -346,35 +294,23 @@ describe("Listings Contract", function () {
       expect(actualListing.seller).to.equal(providedListing.seller);
       expect(actualListing.startTimeSec).to.equal(providedListing.startTimeSec);
       expect(actualListing.endTimeSec).to.equal(providedListing.endTimeSec);
-      expect(actualListing.startPriceAttoSci).to.equal(
-        providedListing.startPriceAttoSci
-      );
-      expect(actualListing.priceIncreases).to.equal(
-        providedListing.priceIncreases
-      );
-      expect(actualListing.priceSlopeNumerator).to.equal(
-        providedListing.priceSlopeNumerator
-      );
+      expect(actualListing.startPriceAttoSci).to.equal(providedListing.startPriceAttoSci);
+      expect(actualListing.priceIncreases).to.equal(providedListing.priceIncreases);
+      expect(actualListing.priceSlopeNumerator).to.equal(providedListing.priceSlopeNumerator);
     });
 
-    it("should create an indefinite listing with endTimeSec == 0", async function () {
+    it('should create an indefinite listing with endTimeSec == 0', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       // we will create this listing using the SUPERADMIN as the operator
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.SUPERADMIN.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.SUPERADMIN.address, true);
 
       let providedListing: typeof this.listings.Listing = await this.listNFT(
         tokenId,
         {
-          startPriceAttoSci: "1000",
-          endPriceAttoSci: "1500", // ignored
+          startPriceAttoSci: '1000',
+          endPriceAttoSci: '1500', // ignored
           durationSec: this.INFINITE,
         },
         this.SUPERADMIN, // operator
@@ -385,59 +321,43 @@ describe("Listings Contract", function () {
       expect(actualListing.seller).to.equal(this.OWNER.address);
       expect(actualListing.startTimeSec).to.equal(providedListing.startTimeSec);
       expect(actualListing.endTimeSec).to.equal(0);
-      expect(actualListing.startPriceAttoSci).to.equal(
-        providedListing.startPriceAttoSci
-      );
-      expect(actualListing.priceIncreases).to.equal(
-        providedListing.priceIncreases
-      );
+      expect(actualListing.startPriceAttoSci).to.equal(providedListing.startPriceAttoSci);
+      expect(actualListing.priceIncreases).to.equal(providedListing.priceIncreases);
       expect(actualListing.priceSlopeNumerator).to.equal(0);
     });
 
-    it("should revert when trying to create an auction with a fungible token", async function () {
+    it('should revert when trying to create an auction with a fungible token', async function () {
       await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       await this.toRevert(async () => {
         await this.listNFT(0);
-      }, "Invalid NFT");
+      }, 'Invalid NFT');
     });
 
-    it("should revert for an NFT if the blocklist flag set", async function () {
+    it('should revert for an NFT if the blocklist flag set', async function () {
       let tokenId = await this.mintNextNFT();
       await this.tokensAs(this.SUPERADMIN).blocklist(tokenId, true);
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       await this.toRevert(async () => {
         await this.listNFT(tokenId);
-      }, "NFT is blocklisted");
+      }, 'NFT is blocklisted');
     });
 
-    it("should revert if updating and a fee is included", async function () {
+    it('should revert if updating and a fee is included', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
 
       await this.toRevert(async () => {
         await this.listNFT(tokenId);
-      }, "Wrong listing fee");
+      }, 'Wrong listing fee');
     });
 
-    it("should revert when endTimeSec <= startTimeSec", async function () {
+    it('should revert when endTimeSec <= startTimeSec', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       // revert if completely in the past
       await this.toRevert(async () => {
@@ -451,7 +371,7 @@ describe("Listings Contract", function () {
           BigNumber.from(1),
           { value: (await this.listings.listingFee()).toString() }
         );
-      }, "Invalid end time");
+      }, 'Invalid end time');
 
       // revert if endTime < startTime
       await this.toRevert(async () => {
@@ -465,15 +385,12 @@ describe("Listings Contract", function () {
           BigNumber.from(1),
           { value: (await this.listings.listingFee()).toString() }
         );
-      }, "Invalid start time");
+      }, 'Invalid start time');
     });
 
-    it("should revert with zero fee payment", async function () {
+    it('should revert with zero fee payment', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       // can't use helper because we want it to break
       let startTimeSec = await time.latest();
@@ -485,9 +402,9 @@ describe("Listings Contract", function () {
         startPriceAttoSci,
         BigNumber.from(0)
       );
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
       await time.setNextBlockTimestamp(endTimeSec + 1);
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
 
       await this.toRevert(async () => {
         await this.listingsAs(this.OWNER).setListing(
@@ -500,15 +417,12 @@ describe("Listings Contract", function () {
           priceSlopeNumerator,
           { value: 0 }
         );
-      }, "Wrong listing fee");
+      }, 'Wrong listing fee');
     });
 
-    it("should allow with zero fee payment for SUPERADMIN", async function () {
+    it('should allow with zero fee payment for SUPERADMIN', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       await this.listingsAs(this.SUPERADMIN).setListing(
         tokenId,
@@ -533,7 +447,7 @@ describe("Listings Contract", function () {
           BigNumber.from(1),
           { value: 10 }
         );
-      }, "Wrong listing fee");
+      }, 'Wrong listing fee');
 
       // this is a new listing but SUPERADMIN should not pay a fee
       tokenId = await this.mintNextNFT();
@@ -548,15 +462,12 @@ describe("Listings Contract", function () {
           BigNumber.from(1),
           { value: 10 }
         );
-      }, "Wrong listing fee");
+      }, 'Wrong listing fee');
     });
 
-    it("should revert with overpayment of listing fee", async function () {
+    it('should revert with overpayment of listing fee', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       // can't use helper because we want it to break
       let startTimeSec = await time.latest();
@@ -568,9 +479,9 @@ describe("Listings Contract", function () {
         startPriceAttoSci,
         BigNumber.from(0)
       );
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
       await time.setNextBlockTimestamp(endTimeSec + 1);
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
 
       await this.toRevert(async () => {
         await this.listingsAs(this.OWNER).setListing(
@@ -583,10 +494,10 @@ describe("Listings Contract", function () {
           priceSlopeNumerator,
           { value: (await this.listings.listingFee()).mul(2).toString() }
         );
-      }, "Wrong listing fee");
+      }, 'Wrong listing fee');
     });
 
-    it("should revert if permissions are wrong", async function () {
+    it('should revert if permissions are wrong', async function () {
       // setup tokens
       let tokenId = await this.mintNextNFT();
       await this.creditSCI(this.ANYONE, 1000);
@@ -601,10 +512,7 @@ describe("Listings Contract", function () {
         startPriceAttoSci,
         BigNumber.from(0)
       );
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       await this.listingsAs(this.OWNER).denySuperadminControl(true);
       await this.toRevert(async () => {
@@ -618,7 +526,7 @@ describe("Listings Contract", function () {
           priceSlopeNumerator,
           { value: (await this.listings.listingFee()).toString() }
         );
-      }, "SELLER has denied SUPERADMIN");
+      }, 'SELLER has denied SUPERADMIN');
 
       await this.toRevert(async () => {
         await this.listingsAs(this.CEO).setListing(
@@ -631,56 +539,36 @@ describe("Listings Contract", function () {
           priceSlopeNumerator,
           { value: (await this.listings.listingFee()).toString() }
         );
-      }, "Only SELLER or SUPERADMIN");
+      }, 'Only SELLER or SUPERADMIN');
     });
   });
 
-  describe("acceptListing", function () {
-    it("should revert when paused", async function () {
+  describe('acceptListing', function () {
+    it('should revert when paused', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
 
       await this.listingsAs(this.CEO).pause();
 
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
       await this.toRevert(async () => {
-        await this.listingsAs(this.ANYONE).acceptListing(
-          this.ANYONE.address,
-          tokenId,
-          100
-        );
-      }, "Pausable: paused");
+        await this.listingsAs(this.ANYONE).acceptListing(this.ANYONE.address, tokenId, 100);
+      }, 'Pausable: paused');
     });
 
-    it("should revert when price exceeds maxPrice", async function () {
+    it('should revert when price exceeds maxPrice', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
 
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
       await this.toRevert(async () => {
-        await this.listingsAs(this.ANYONE).acceptListing(
-          this.ANYONE.address,
-          tokenId,
-          10
-        );
-      }, "Price exceeds limit");
+        await this.listingsAs(this.ANYONE).acceptListing(this.ANYONE.address, tokenId, 10);
+      }, 'Price exceeds limit');
     });
 
-    it("should accept when price is below maxPrice", async function () {
+    it('should accept when price is below maxPrice', async function () {
       let amount = 10000;
       await this.creditSCI(this.ANYONE, amount);
 
@@ -689,67 +577,46 @@ describe("Listings Contract", function () {
       expect(await this.balanceNFT(this.listings, tokenId)).to.equal(0);
       expect(await this.balanceNFT(this.ANYONE, tokenId)).to.equal(0);
 
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
 
-      let price = await this.listings["getListingPrice(uint64)"](tokenId);
+      let price = await this.listings['getListingPrice(uint64)'](tokenId);
       expect(price).to.equal(1000);
 
       await this.toRevert(async () => {
-        await this.listings["getListingPrice(uint64)"](tokenId + 1);
-      }, "Invalid NFT");
+        await this.listings['getListingPrice(uint64)'](tokenId + 1);
+      }, 'Invalid NFT');
 
       expect(await this.balanceNFT(this.OWNER, tokenId)).to.equal(0);
       expect(await this.balanceNFT(this.listings, tokenId)).to.equal(1);
       expect(await this.balanceNFT(this.ANYONE, tokenId)).to.equal(0);
 
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
-      await this.listingsAs(this.ANYONE).acceptListing(
-        this.ANYONE.address,
-        tokenId,
-        10000
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
+      await this.listingsAs(this.ANYONE).acceptListing(this.ANYONE.address, tokenId, 10000);
 
       expect(await this.balanceNFT(this.OWNER, tokenId)).to.equal(0);
       expect(await this.balanceNFT(this.listings, tokenId)).to.equal(0);
       expect(await this.balanceNFT(this.ANYONE, tokenId)).to.equal(1);
     });
 
-    it("should revert for an invalid NFT", async function () {
+    it('should revert for an invalid NFT', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
 
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
       await this.toRevert(async () => {
-        await this.listingsAs(this.ANYONE).acceptListing(
-          this.ANYONE.address,
-          tokenId + 1,
-          5000
-        );
-      }, "Invalid NFT");
+        await this.listingsAs(this.ANYONE).acceptListing(this.ANYONE.address, tokenId + 1, 5000);
+      }, 'Invalid NFT');
     });
 
-    it("should exchange tokens as expected in a fixed price auction", async function () {
+    it('should exchange tokens as expected in a fixed price auction', async function () {
       // set the listing fee
       let listingFee = ethers.BigNumber.from(1234567);
 
       let tx = await this.listingsAs(this.CFO).setListingFee(listingFee);
       const receipt = await tx.wait();
-      expect(receipt.events?.filter((x: Event) => x.event == "ListingFeeSet"))
-        .to.not.be.null;
+      expect(receipt.events?.filter((x: Event) => x.event == 'ListingFeeSet')).to.not.be.null;
       expect(receipt.events[0].args.listingFee).to.equal(listingFee);
 
       // fund accounts with SCI tokens
@@ -768,12 +635,8 @@ describe("Listings Contract", function () {
       expect(await this.tokens.isFullBenefit(tokenId)).to.true;
       expect(await this.tokens.willUnsetFullBenefit(tokenId)).to.true;
 
-      expect(
-        await this.tokens.hasRole(
-          await this.tokens.MARKETPLACE_ROLE(),
-          this.listings.address
-        )
-      ).to.be.true;
+      expect(await this.tokens.hasRole(await this.tokens.MARKETPLACE_ROLE(), this.listings.address))
+        .to.be.true;
       expect(
         (await this.tokens.scienceNFTs(tokenId)).status.toNumber() &
           (await this.tokens.UNSET_FULL_BENEFIT_FLAG())
@@ -781,13 +644,10 @@ describe("Listings Contract", function () {
 
       let fixedPriceAttoSci = BigNumber.from(6543);
       // create a fixed price listing
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       let providedListing = await this.listNFT(tokenId, {
         startPriceAttoSci: fixedPriceAttoSci.toString(), //need to be less than amount above (10k)
-        endPriceAttoSci: "0", // ignored
+        endPriceAttoSci: '0', // ignored
         durationSec: this.INFINITE,
       });
 
@@ -796,19 +656,12 @@ describe("Listings Contract", function () {
 
       // don't withdraw too much
       await this.toRevert(async () => {
-        await this.listingsAs(this.CFO).withdraw(
-          this.ANYONE.address,
-          listingFee.add(100)
-        );
-      }, "Value exceeds balance");
+        await this.listingsAs(this.CFO).withdraw(this.ANYONE.address, listingFee.add(100));
+      }, 'Value exceeds balance');
 
       await this.listingsAs(this.CFO).withdraw(this.ANYONE.address, listingFee);
-      expect(await this.ANYONE.getBalance()).to.equal(
-        initialAnyoneBalance.add(listingFee)
-      );
-      expect(
-        await this.listings.provider.getBalance(this.listings.address)
-      ).to.equal(0);
+      expect(await this.ANYONE.getBalance()).to.equal(initialAnyoneBalance.add(listingFee));
+      expect(await this.listings.provider.getBalance(this.listings.address)).to.equal(0);
 
       // check that NFT now belongs to the contract
       expect(await this.balanceNFT(this.OWNER, tokenId)).to.equal(0);
@@ -822,26 +675,20 @@ describe("Listings Contract", function () {
       // set the royalty to 50% (ignored because of full benefit flag)
       let tx2 = await this.listingsAs(this.CFO).setRoyaltyNumerator(128);
       const receipt2 = await tx2.wait();
-      expect(
-        receipt2.events?.filter((x: Event) => x.event == "RoyaltyNumeratorSet")
-      ).to.not.be.null;
+      expect(receipt2.events?.filter((x: Event) => x.event == 'RoyaltyNumeratorSet')).to.not.be
+        .null;
       expect(receipt2.events[0].args.royaltyNumerator).to.equal(128);
 
       expect(await this.listings.royaltyNumerator()).to.be.equal(128);
 
       let buyerSCIBefore = BigNumber.from(await this.balanceSCI(this.ANYONE));
       let sellerSCIBefore = BigNumber.from(await this.balanceSCI(this.OWNER));
-      let beneficiarySCIBefore = BigNumber.from(
-        await this.balanceSCI(this.CEO)
-      );
+      let beneficiarySCIBefore = BigNumber.from(await this.balanceSCI(this.CEO));
 
       let fullBenefit = await this.tokens.isFullBenefit(tokenId);
 
       // buy the NFT as ANYONE
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
       await this.listingsAs(this.ANYONE).acceptListing(
         this.ANYONE.address,
         tokenId,
@@ -858,12 +705,12 @@ describe("Listings Contract", function () {
       expect(await this.balanceNFT(this.ANYONE, tokenId)).to.equal(1);
 
       let buyerPaidSCI = buyerSCIBefore.sub(await this.balanceSCI(this.ANYONE));
-      let sellerReceivedSCI = BigNumber.from(
-        await this.balanceSCI(this.OWNER)
-      ).sub(sellerSCIBefore);
-      let beneficiaryReceivedSCI = BigNumber.from(
-        await this.balanceSCI(this.CEO)
-      ).sub(beneficiarySCIBefore);
+      let sellerReceivedSCI = BigNumber.from(await this.balanceSCI(this.OWNER)).sub(
+        sellerSCIBefore
+      );
+      let beneficiaryReceivedSCI = BigNumber.from(await this.balanceSCI(this.CEO)).sub(
+        beneficiarySCIBefore
+      );
 
       // proceeds to beneficiary based on FULL_BENEFIT_FLAG
       expect(await this.tokens.isFullBenefit(tokenId)).to.false;
@@ -882,12 +729,10 @@ describe("Listings Contract", function () {
         ethers.constants.AddressZero
       );
 
-      expect(
-        await this.listings.provider.getBalance(this.listings.address)
-      ).to.equal(0);
+      expect(await this.listings.provider.getBalance(this.listings.address)).to.equal(0);
     });
 
-    it("should exchange tokens as expected in two declining price auctions", async function () {
+    it('should exchange tokens as expected in two declining price auctions', async function () {
       // in this test, we will observe the sale of an NFT twice along its auction curve
 
       // fund accounts with SCI tokens
@@ -913,10 +758,7 @@ describe("Listings Contract", function () {
       let startPriceAttoSci = BigNumber.from(12000);
       let endPriceAttoSci = BigNumber.from(2000);
       let durationSec = 100000;
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       let providedListing = await this.listNFT(tokenId, {
         startPriceAttoSci: startPriceAttoSci.toString(),
@@ -933,34 +775,21 @@ describe("Listings Contract", function () {
 
       // set the royalty value to 25% (64/256)
       let royaltyNumeratorValue = 64;
-      await this.listingsAs(this.CFO).setRoyaltyNumerator(
-        royaltyNumeratorValue
-      );
-      expect(await this.listings.royaltyNumerator()).to.be.equal(
-        royaltyNumeratorValue
-      );
+      await this.listingsAs(this.CFO).setRoyaltyNumerator(royaltyNumeratorValue);
+      expect(await this.listings.royaltyNumerator()).to.be.equal(royaltyNumeratorValue);
 
       // initial balances
       let buyerSCIBefore = BigNumber.from(await this.balanceSCI(this.ANYONE));
       let sellerSCIBefore = BigNumber.from(await this.balanceSCI(this.OWNER));
-      let beneficiarySCIBefore = BigNumber.from(
-        await this.balanceSCI(this.CEO)
-      );
+      let beneficiarySCIBefore = BigNumber.from(await this.balanceSCI(this.CEO));
 
       // set the time of purchase along the auction
       let f = 0.2;
-      let targetTimeSec =
-        (1 - f) * providedListing.startTimeSec + f * providedListing.endTimeSec;
-      let expectedPriceAttoSci = startPriceAttoSci
-        .mul(4)
-        .div(5)
-        .add(endPriceAttoSci.mul(1).div(5));
+      let targetTimeSec = (1 - f) * providedListing.startTimeSec + f * providedListing.endTimeSec;
+      let expectedPriceAttoSci = startPriceAttoSci.mul(4).div(5).add(endPriceAttoSci.mul(1).div(5));
 
       // purchase as ANYONE
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
 
       // include some tests here for expected reverting cases
       await this.listingsAs(this.ANYONE).denySuperadminControl(true);
@@ -970,20 +799,20 @@ describe("Listings Contract", function () {
           tokenId,
           expectedPriceAttoSci
         );
-      }, "BUYER has denied SUPERADMIN");
+      }, 'BUYER has denied SUPERADMIN');
       await this.toRevert(async () => {
         await this.listingsAs(this.CEO).acceptListing(
           this.ANYONE.address,
           tokenId,
           expectedPriceAttoSci
         );
-      }, "Only BUYER or SUPERADMIN");
+      }, 'Only BUYER or SUPERADMIN');
       await this.listingsAs(this.ANYONE).denySuperadminControl(false);
 
       // set blocktime
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
       await time.setNextBlockTimestamp(Math.round(targetTimeSec));
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
 
       // accept the listing
       await this.listingsAs(this.SUPERADMIN).acceptListing(
@@ -1003,19 +832,17 @@ describe("Listings Contract", function () {
 
       // check that the correct amounts were paid
       let buyerPaidSCI = buyerSCIBefore.sub(await this.balanceSCI(this.ANYONE));
-      let sellerReceivedSCI = BigNumber.from(
-        await this.balanceSCI(this.OWNER)
-      ).sub(sellerSCIBefore);
-      let beneficiaryReceivedSCI = BigNumber.from(
-        await this.balanceSCI(this.CEO)
-      ).sub(beneficiarySCIBefore);
+      let sellerReceivedSCI = BigNumber.from(await this.balanceSCI(this.OWNER)).sub(
+        sellerSCIBefore
+      );
+      let beneficiaryReceivedSCI = BigNumber.from(await this.balanceSCI(this.CEO)).sub(
+        beneficiarySCIBefore
+      );
 
       // first sale proceeds (full benefit to beneficiary)
       let expectedRoyalty = expectedPriceAttoSci;
       expect(beneficiaryReceivedSCI).to.be.equal(expectedRoyalty);
-      expect(sellerReceivedSCI).to.be.equal(
-        expectedPriceAttoSci.sub(expectedRoyalty)
-      );
+      expect(sellerReceivedSCI).to.be.equal(expectedPriceAttoSci.sub(expectedRoyalty));
       expect(buyerPaidSCI).to.be.equal(expectedPriceAttoSci);
       expect((await this.listings.sellerListings(tokenId)).seller).to.equal(
         ethers.constants.AddressZero
@@ -1025,17 +852,11 @@ describe("Listings Contract", function () {
 
       // the NFT admin should be unchanged by the sale (still the OWNER)
       await this.toRevert(async () => {
-        await this.tokensAs(this.ANYONE).setBeneficiary(
-          tokenId,
-          this.OWNER.address
-        );
-      }, "Only ADMIN");
+        await this.tokensAs(this.ANYONE).setBeneficiary(tokenId, this.OWNER.address);
+      }, 'Only ADMIN');
 
       // actually change beneficiary, as OWNER acting as the ADMIN, to OWNER
-      await this.tokensAs(this.OWNER).setBeneficiary(
-        tokenId,
-        this.OWNER.address
-      );
+      await this.tokensAs(this.OWNER).setBeneficiary(tokenId, this.OWNER.address);
 
       // relist as the new owner (ANYONE)
       startPriceAttoSci = BigNumber.from(2000);
@@ -1063,29 +884,19 @@ describe("Listings Contract", function () {
 
       // set the time of purchase
       f = 0.6;
-      targetTimeSec =
-        (1 - f) * providedListing.startTimeSec + f * providedListing.endTimeSec;
+      targetTimeSec = (1 - f) * providedListing.startTimeSec + f * providedListing.endTimeSec;
       let expectedPricefixedPrice = startPriceAttoSci
         .mul(4)
         .div(10)
         .add(endPriceAttoSci.mul(6).div(10));
 
-      await this.tokensAs(this.CEO).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.CEO).setApprovalForAll(this.listings.address, true);
 
       // purchase
-      await ethers.provider.send("evm_mine");
-      await time.setNextBlockTimestamp(
-        BigNumber.from(Math.round(targetTimeSec))
-      );
-      await ethers.provider.send("evm_mine");
-      await this.listingsAs(this.CEO).acceptListing(
-        this.CEO.address,
-        tokenId,
-        5000
-      );
+      await ethers.provider.send('evm_mine');
+      await time.setNextBlockTimestamp(BigNumber.from(Math.round(targetTimeSec)));
+      await ethers.provider.send('evm_mine');
+      await this.listingsAs(this.CEO).acceptListing(this.CEO.address, tokenId, 5000);
 
       // check that NFT was transferred to the CEO as directed
       expect(await this.balanceNFT(this.OWNER, tokenId)).to.equal(0);
@@ -1094,26 +905,22 @@ describe("Listings Contract", function () {
       expect(await this.balanceNFT(this.ANYONE, tokenId)).to.equal(0);
 
       buyerPaidSCI = buyerSCIBefore.sub(await this.balanceSCI(this.CEO));
-      sellerReceivedSCI = BigNumber.from(
-        await this.balanceSCI(this.ANYONE)
-      ).sub(sellerSCIBefore);
-      beneficiaryReceivedSCI = BigNumber.from(
-        await this.balanceSCI(this.OWNER)
-      ).sub(beneficiarySCIBefore);
+      sellerReceivedSCI = BigNumber.from(await this.balanceSCI(this.ANYONE)).sub(sellerSCIBefore);
+      beneficiaryReceivedSCI = BigNumber.from(await this.balanceSCI(this.OWNER)).sub(
+        beneficiarySCIBefore
+      );
 
       // second sale proceeds
       expect(beneficiaryReceivedSCI).to.be.equal(
         expectedPricefixedPrice.mul(royaltyNumeratorValue).div(256)
       );
       expect(sellerReceivedSCI).to.be.equal(
-        expectedPricefixedPrice
-          .mul(BigNumber.from(256).sub(royaltyNumeratorValue))
-          .div(256)
+        expectedPricefixedPrice.mul(BigNumber.from(256).sub(royaltyNumeratorValue)).div(256)
       );
       expect(buyerPaidSCI).to.be.equal(expectedPricefixedPrice);
     });
 
-    it("should exchange tokens as expected in an increasing price auction", async function () {
+    it('should exchange tokens as expected in an increasing price auction', async function () {
       // in this test, we will observe the sale of an NFT that increases in price
 
       // fund accounts with SCI tokens
@@ -1130,14 +937,8 @@ describe("Listings Contract", function () {
       expect(await this.balanceNFT(this.OWNER, tokenId2)).to.equal(1);
 
       // set the beneficiary to be the CEO
-      await this.tokensAs(this.OWNER).setBeneficiary(
-        tokenId1,
-        this.CEO.address
-      );
-      await this.tokensAs(this.OWNER).setBeneficiary(
-        tokenId2,
-        this.CEO.address
-      );
+      await this.tokensAs(this.OWNER).setBeneficiary(tokenId1, this.CEO.address);
+      await this.tokensAs(this.OWNER).setBeneficiary(tokenId2, this.CEO.address);
 
       // remove the full benefit flags before we list
       await this.tokensAs(this.OWNER).setFullBenefitFlag(tokenId1, false);
@@ -1147,10 +948,7 @@ describe("Listings Contract", function () {
       let startPriceAttoSci = BigNumber.from(0);
       let endPriceAttoSci = BigNumber.from(20000);
       let durationSec = 100000; // make sure this is long enough for the second listing to complete...
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       let providedListing = await this.listNFT(tokenId1, {
         startPriceAttoSci: startPriceAttoSci.toString(),
@@ -1163,10 +961,7 @@ describe("Listings Contract", function () {
       let targetTimeSec = Math.round(
         (1 - f) * providedListing.startTimeSec + f * providedListing.endTimeSec
       );
-      let expectedPriceAttoSci = startPriceAttoSci
-        .mul(3)
-        .div(4)
-        .add(endPriceAttoSci.mul(1).div(4));
+      let expectedPriceAttoSci = startPriceAttoSci.mul(3).div(4).add(endPriceAttoSci.mul(1).div(4));
 
       // add a second fixed price listing
       let fixedPriceAttoSci = BigNumber.from(10000);
@@ -1184,13 +979,11 @@ describe("Listings Contract", function () {
 
       let buyerSCIBefore = BigNumber.from(await this.balanceSCI(this.ANYONE));
       let sellerSCIBefore = BigNumber.from(await this.balanceSCI(this.OWNER));
-      let beneficiarySCIBefore = BigNumber.from(
-        await this.balanceSCI(this.CEO)
-      );
+      let beneficiarySCIBefore = BigNumber.from(await this.balanceSCI(this.CEO));
 
       expect(targetTimeSec).to.be.gt(
         await time.latest(),
-        "block timestamp is ahead of desired purchase time!"
+        'block timestamp is ahead of desired purchase time!'
       );
 
       // benefit flags before purchase should both be false
@@ -1198,27 +991,14 @@ describe("Listings Contract", function () {
       expect(await this.tokens.isFullBenefit(tokenId2)).to.false;
 
       // purchase both listings as ANYONE
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
 
-      await ethers.provider.send("evm_mine");
-      await time.setNextBlockTimestamp(
-        BigNumber.from(Math.round(targetTimeSec))
-      );
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
+      await time.setNextBlockTimestamp(BigNumber.from(Math.round(targetTimeSec)));
+      await ethers.provider.send('evm_mine');
 
-      await this.listingsAs(this.ANYONE).acceptListing(
-        this.ANYONE.address,
-        tokenId1,
-        12000
-      );
-      await this.listingsAs(this.ANYONE).acceptListing(
-        this.ANYONE.address,
-        tokenId2,
-        12000
-      );
+      await this.listingsAs(this.ANYONE).acceptListing(this.ANYONE.address, tokenId1, 12000);
+      await this.listingsAs(this.ANYONE).acceptListing(this.ANYONE.address, tokenId2, 12000);
 
       // check that NFTs were transferred
       expect(await this.balanceNFT(this.listings, tokenId1)).to.equal(0);
@@ -1227,21 +1007,19 @@ describe("Listings Contract", function () {
       expect(await this.balanceNFT(this.ANYONE, tokenId2)).to.equal(1);
 
       let buyerPaidSCI = buyerSCIBefore.sub(await this.balanceSCI(this.ANYONE));
-      let sellerReceivedSCI = BigNumber.from(
-        await this.balanceSCI(this.OWNER)
-      ).sub(sellerSCIBefore);
-      let beneficiaryReceivedSCI = BigNumber.from(
-        await this.balanceSCI(this.CEO)
-      ).sub(beneficiarySCIBefore);
+      let sellerReceivedSCI = BigNumber.from(await this.balanceSCI(this.OWNER)).sub(
+        sellerSCIBefore
+      );
+      let beneficiaryReceivedSCI = BigNumber.from(await this.balanceSCI(this.CEO)).sub(
+        beneficiarySCIBefore
+      );
 
       // check sale proceeds
       let royaltyTokenId1 = expectedPriceAttoSci
         .mul(await this.listings.royaltyNumerator())
         .div(256);
 
-      let royaltyTokenId2 = fixedPriceAttoSci
-        .mul(await this.listings.royaltyNumerator())
-        .div(256);
+      let royaltyTokenId2 = fixedPriceAttoSci.mul(await this.listings.royaltyNumerator()).div(256);
 
       let totalRoyalty = royaltyTokenId1.add(royaltyTokenId2);
       let totalPaid = expectedPriceAttoSci.add(fixedPriceAttoSci);
@@ -1258,7 +1036,7 @@ describe("Listings Contract", function () {
       );
     });
 
-    it("should revert when endTimeSec > block.timestamp", async function () {
+    it('should revert when endTimeSec > block.timestamp', async function () {
       // setup tokens
       let tokenId = await this.mintNextNFT();
       await this.creditSCI(this.ANYONE, 1000);
@@ -1274,10 +1052,7 @@ describe("Listings Contract", function () {
         BigNumber.from(0)
       );
 
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       let tx = await this.listingsAs(this.OWNER).setListing(
         tokenId,
         this.OWNER.address,
@@ -1292,13 +1067,13 @@ describe("Listings Contract", function () {
       const receipt = await tx.wait();
 
       const iface = new ethers.utils.Interface([
-        "event TransferSingle(address indexed _operator, address indexed _from,  address indexed _to, uint256 _id, uint256 _value)",
+        'event TransferSingle(address indexed _operator, address indexed _from,  address indexed _to, uint256 _id, uint256 _value)',
       ]);
 
       let TransferSingleEvent;
       for (let log of receipt.logs) {
         const parsed = iface.parseLog(log);
-        if (parsed.name === "TransferSingle") {
+        if (parsed.name === 'TransferSingle') {
           TransferSingleEvent = parsed;
           break;
         }
@@ -1308,44 +1083,30 @@ describe("Listings Contract", function () {
       expect(TransferSingleEvent.args._to).to.equal(this.listings.address);
       expect(TransferSingleEvent.args._value).to.equal(1);
 
-      expect(receipt.events?.filter((x: Event) => x.event == "ListingUpdated"))
-        .to.not.be.null;
-      let ListingUpdatedEvent = receipt.events.find(
-        (e: any) => e.event == "ListingUpdated"
-      );
+      expect(receipt.events?.filter((x: Event) => x.event == 'ListingUpdated')).to.not.be.null;
+      let ListingUpdatedEvent = receipt.events.find((e: any) => e.event == 'ListingUpdated');
       expect(ListingUpdatedEvent.args.tokenId).to.equal(tokenId);
       expect(ListingUpdatedEvent.args.seller).to.equal(this.OWNER.address);
       expect(ListingUpdatedEvent.args.startTimeSec).to.equal(startTimeSec);
       expect(ListingUpdatedEvent.args.endTimeSec).to.equal(endTimeSec);
-      expect(ListingUpdatedEvent.args.startPriceAttoSci).to.equal(
-        startPriceAttoSci
-      );
+      expect(ListingUpdatedEvent.args.startPriceAttoSci).to.equal(startPriceAttoSci);
       expect(ListingUpdatedEvent.args.priceIncreases).to.equal(false);
-      expect(ListingUpdatedEvent.args.priceSlopeNumerator).to.equal(
-        priceSlopeNumerator
-      );
+      expect(ListingUpdatedEvent.args.priceSlopeNumerator).to.equal(priceSlopeNumerator);
 
       // move past listing endTimeSec
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
       await time.setNextBlockTimestamp(endTimeSec + 1);
-      await ethers.provider.send("evm_mine");
+      await ethers.provider.send('evm_mine');
 
       // purchase should revert
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
 
       await this.toRevert(async () => {
-        await this.listingsAs(this.ANYONE).acceptListing(
-          this.ANYONE.address,
-          tokenId,
-          5000
-        );
-      }, "Listing has expired");
+        await this.listingsAs(this.ANYONE).acceptListing(this.ANYONE.address, tokenId, 5000);
+      }, 'Listing has expired');
     });
 
-    it("should revert when block.timestamp < startTimeSec", async function () {
+    it('should revert when block.timestamp < startTimeSec', async function () {
       // setup tokens
       let tokenId = await this.mintNextNFT();
       await this.creditSCI(this.ANYONE, 1000);
@@ -1360,10 +1121,7 @@ describe("Listings Contract", function () {
         startPriceAttoSci,
         BigNumber.from(0)
       );
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listingsAs(this.OWNER).setListing(
         tokenId,
         this.OWNER.address,
@@ -1376,65 +1134,54 @@ describe("Listings Contract", function () {
       );
 
       // purchase should revert
-      await this.tokensAs(this.ANYONE).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.ANYONE).setApprovalForAll(this.listings.address, true);
 
       await this.toRevert(async () => {
-        await this.listingsAs(this.ANYONE).acceptListing(
-          this.ANYONE.address,
-          tokenId,
-          5000
-        );
-      }, "Listing has not yet started");
+        await this.listingsAs(this.ANYONE).acceptListing(this.ANYONE.address, tokenId, 5000);
+      }, 'Listing has not yet started');
 
-      expect((await this.listings.sellerListings(tokenId)).seller).to.equal(
-        this.OWNER.address
-      );
+      expect((await this.listings.sellerListings(tokenId)).seller).to.equal(this.OWNER.address);
     });
   });
 
-  describe("setRoyaltyNumerator", function () {
-    it("should set from CFO", async function () {
+  describe('setRoyaltyNumerator', function () {
+    it('should set from CFO', async function () {
       await this.listingsAs(this.CFO).setRoyaltyNumerator(42);
       expect(await this.listings.royaltyNumerator()).to.equal(42);
     });
 
-    it("should revert as ANYONE role", async function () {
+    it('should revert as ANYONE role', async function () {
       await this.toRevert(async () => {
         await this.listingsAs(this.ANYONE).setRoyaltyNumerator(42);
-      }, "Only CFO");
+      }, 'Only CFO');
     });
 
-    it("should revert as any other role", async function () {
+    it('should revert as any other role', async function () {
       let allSigners = await ethers.getSigners();
       let notAllowed = allSigners.filter((s) => s.address != this.CFO.address);
-      let f = async (s: SignerWithAddress) =>
-        await this.listingsAs(s).setRoyaltyNumerator(42);
-      let m = "Only CFO";
+      let f = async (s: SignerWithAddress) => await this.listingsAs(s).setRoyaltyNumerator(42);
+      let m = 'Only CFO';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
 
-  describe("setListingFee", function () {
-    it("should set from CFO", async function () {
+  describe('setListingFee', function () {
+    it('should set from CFO', async function () {
       await this.listingsAs(this.CFO).setListingFee(123456);
       expect(await this.listings.listingFee()).to.equal(123456);
     });
 
-    it("should revert as any other role", async function () {
+    it('should revert as any other role', async function () {
       let allSigners = await ethers.getSigners();
       let notAllowed = allSigners.filter((s) => s.address != this.CFO.address);
-      let f = async (s: SignerWithAddress) =>
-        this.listingsAs(this.ANYONE).setListingFee(123456);
-      let m = "Only CFO";
+      let f = async (s: SignerWithAddress) => this.listingsAs(this.ANYONE).setListingFee(123456);
+      let m = 'Only CFO';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
 
-  describe("getListingPrice", function () {
-    it("should calculate correct prices", async function () {
+  describe('getListingPrice', function () {
+    it('should calculate correct prices', async function () {
       // parameter order is: time, startTimeSec,startPriceAttoSci, priceIncreases, priceSlopeNumerator
       function y(x: number, x0: number, m: number, y0: number) {
         return m * (x - x0) + y0;
@@ -1464,90 +1211,111 @@ describe("Listings Contract", function () {
 
         if (expected >= 0 && p.x >= p.x0) {
           expect(
-            await this.listings[
-              "getListingPrice(uint64,uint64,uint256,bool,uint256)"
-            ](p.x, p.x0, p.y0, p.m > 0, priceSlopeNumerator)
+            await this.listings['getListingPrice(uint64,uint64,uint256,bool,uint256)'](
+              p.x,
+              p.x0,
+              p.y0,
+              p.m > 0,
+              priceSlopeNumerator
+            )
           ).to.equal(expected);
         } else {
           if (p.x >= p.x0) {
             expect(
-              await this.listings[
-                "getListingPrice(uint64,uint64,uint256,bool,uint256)"
-              ](p.x, p.x0, p.y0, p.m > 0, priceSlopeNumerator)
+              await this.listings['getListingPrice(uint64,uint64,uint256,bool,uint256)'](
+                p.x,
+                p.x0,
+                p.y0,
+                p.m > 0,
+                priceSlopeNumerator
+              )
             ).to.equal(0);
           } else {
             await this.toRevert(async () => {
-              await this.listings[
-                "getListingPrice(uint64,uint64,uint256,bool,uint256)"
-              ](p.x, p.x0, p.y0, p.m > 0, priceSlopeNumerator);
-            }, "Invalid time");
+              await this.listings['getListingPrice(uint64,uint64,uint256,bool,uint256)'](
+                p.x,
+                p.x0,
+                p.y0,
+                p.m > 0,
+                priceSlopeNumerator
+              );
+            }, 'Invalid time');
           }
         }
       }
     });
-    it("should revert for time in the past", async function () {
+    it('should revert for time in the past', async function () {
       await this.toRevert(async () => {
-        await this.listings[
-          "getListingPrice(uint64,uint64,uint256,bool,uint256)"
-        ](0, 100, 100, true, BigNumber.from(2).pow(64));
-      }, "Invalid time");
+        await this.listings['getListingPrice(uint64,uint64,uint256,bool,uint256)'](
+          0,
+          100,
+          100,
+          true,
+          BigNumber.from(2).pow(64)
+        );
+      }, 'Invalid time');
     });
 
-    it("should use saturating math", async function () {
+    it('should use saturating math', async function () {
       let time = BigNumber.from(2).pow(64).sub(1);
       let startTimeSec = 0;
       let startPriceAttoSci = BigNumber.from(2).pow(256).sub(1);
       let priceSlopeNumerator = BigNumber.from(2).pow(256).sub(1);
 
       expect(
-        await this.listings[
-          "getListingPrice(uint64,uint64,uint256,bool,uint256)"
-        ](time, startTimeSec, startPriceAttoSci, true, priceSlopeNumerator)
+        await this.listings['getListingPrice(uint64,uint64,uint256,bool,uint256)'](
+          time,
+          startTimeSec,
+          startPriceAttoSci,
+          true,
+          priceSlopeNumerator
+        )
       ).to.equal(BigNumber.from(2).pow(256).sub(1));
 
       startPriceAttoSci = BigNumber.from(100);
       expect(
-        await this.listings[
-          "getListingPrice(uint64,uint64,uint256,bool,uint256)"
-        ](time, startTimeSec, startPriceAttoSci, false, priceSlopeNumerator)
+        await this.listings['getListingPrice(uint64,uint64,uint256,bool,uint256)'](
+          time,
+          startTimeSec,
+          startPriceAttoSci,
+          false,
+          priceSlopeNumerator
+        )
       ).to.equal(0);
     });
   });
 
-  describe("cancelListing", function () {
-    it("should revert when paused", async function () {
+  describe('cancelListing', function () {
+    it('should revert when paused', async function () {
       let tokenId = await this.mintNextNFT();
       await this.listingsAs(this.CEO).pause();
       await this.toRevert(async () => {
         await this.listingsAs(this.ANYONE).cancelListing(tokenId);
-      }, "Pausable: paused");
+      }, 'Pausable: paused');
     });
 
-    it("should revert for an invalid NFT", async function () {
+    it('should revert for an invalid NFT', async function () {
       await this.toRevert(async () => {
         await this.listingsAs(this.ANYONE).cancelListing(5);
-      }, "Invalid NFT");
+      }, 'Invalid NFT');
     });
 
-    it("should cancel from Owner", async function () {
+    it('should cancel from Owner', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
       expect(await this.balanceNFT(this.listings, tokenId)).to.equal(1);
       let tx = await this.listingsAs(this.OWNER).cancelListing(tokenId);
       const receipt = await tx.wait();
 
       const iface = new ethers.utils.Interface([
-        "event TransferSingle(address indexed _operator, address indexed _from,  address indexed _to, uint256 _id, uint256 _value)",
+        'event TransferSingle(address indexed _operator, address indexed _from,  address indexed _to, uint256 _id, uint256 _value)',
       ]);
 
       let TransferSingleEvent;
       for (let log of receipt.logs) {
         const parsed = iface.parseLog(log);
-        if (parsed.name === "TransferSingle") {
+        if (parsed.name === 'TransferSingle') {
           TransferSingleEvent = parsed;
           break;
         }
@@ -1557,15 +1325,10 @@ describe("Listings Contract", function () {
       expect(TransferSingleEvent.args._to).to.equal(this.OWNER.address);
       expect(TransferSingleEvent.args._value).to.equal(1);
 
-      expect(receipt.events?.filter((x: Event) => x.event == "ListingUpdated"))
-        .to.not.be.null;
-      let ListingUpdatedEvent = receipt.events.find(
-        (e: any) => e.event == "ListingUpdated"
-      );
+      expect(receipt.events?.filter((x: Event) => x.event == 'ListingUpdated')).to.not.be.null;
+      let ListingUpdatedEvent = receipt.events.find((e: any) => e.event == 'ListingUpdated');
       expect(ListingUpdatedEvent.args.tokenId).to.equal(tokenId);
-      expect(ListingUpdatedEvent.args.seller).to.equal(
-        ethers.constants.AddressZero
-      );
+      expect(ListingUpdatedEvent.args.seller).to.equal(ethers.constants.AddressZero);
       expect(ListingUpdatedEvent.args.endTimeSec).to.equal(0); //defaults to indefinite auction
       expect(ListingUpdatedEvent.args.startPriceAttoSci).to.equal(1000);
       expect(ListingUpdatedEvent.args.priceIncreases).to.equal(false);
@@ -1578,12 +1341,9 @@ describe("Listings Contract", function () {
       );
     });
 
-    it("should cancel from CEO", async function () {
+    it('should cancel from CEO', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
       expect(await this.balanceNFT(this.listings, tokenId)).to.equal(1);
       await this.listingsAs(this.CEO).cancelListing(tokenId);
@@ -1594,12 +1354,9 @@ describe("Listings Contract", function () {
       );
     });
 
-    it("should revert as any other role", async function () {
+    it('should revert as any other role', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
       expect(await this.balanceNFT(this.listings, tokenId)).to.equal(1);
 
@@ -1610,15 +1367,14 @@ describe("Listings Contract", function () {
           s.address != this.OWNER.address &&
           s.address != this.SUPERADMIN.address
       );
-      let f = async (s: SignerWithAddress) =>
-        await this.listingsAs(s).cancelListing(tokenId);
-      let m = "Only SELLER, SUPERADMIN, or CEO";
+      let f = async (s: SignerWithAddress) => await this.listingsAs(s).cancelListing(tokenId);
+      let m = 'Only SELLER, SUPERADMIN, or CEO';
       expect(await this.checkAllRoles(notAllowed, f, m));
 
       await this.listingsAs(this.OWNER).denySuperadminControl(true);
       await this.toRevert(async () => {
         await this.listingsAs(this.SUPERADMIN).cancelListing(tokenId);
-      }, "SELLER has denied SUPERADMIN");
+      }, 'SELLER has denied SUPERADMIN');
 
       // should cancel if not denied
       await this.listingsAs(this.OWNER).denySuperadminControl(false);
@@ -1626,42 +1382,23 @@ describe("Listings Contract", function () {
     });
   });
 
-  describe("update setListing", function () {
-    it("should revert when paused", async function () {
+  describe('update setListing', function () {
+    it('should revert when paused', async function () {
       await this.listingsAs(this.CEO).pause();
       await this.toRevert(async () => {
-        await this.listingsAs(this.OWNER).setListing(
-          0,
-          this.OWNER.address,
-          1,
-          2,
-          1,
-          true,
-          1
-        );
-      }, "Pausable: paused");
+        await this.listingsAs(this.OWNER).setListing(0, this.OWNER.address, 1, 2, 1, true, 1);
+      }, 'Pausable: paused');
     });
 
-    it("should revert for an invalid NFT", async function () {
+    it('should revert for an invalid NFT', async function () {
       await this.toRevert(async () => {
-        await this.listingsAs(this.OWNER).setListing(
-          5,
-          this.OWNER.address,
-          1,
-          2,
-          1,
-          true,
-          1
-        );
-      }, "Invalid NFT");
+        await this.listingsAs(this.OWNER).setListing(5, this.OWNER.address, 1, 2, 1, true, 1);
+      }, 'Invalid NFT');
     });
 
-    it("should restart after listing has ended, as OWNER", async function () {
+    it('should restart after listing has ended, as OWNER', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       let providedListing = await this.listNFT(tokenId);
       expect(await this.balanceNFT(this.OWNER, tokenId)).to.equal(0);
       expect(await this.balanceNFT(this.listings, tokenId)).to.equal(1);
@@ -1669,15 +1406,9 @@ describe("Listings Contract", function () {
       expect(actualListing.seller).to.equal(this.OWNER.address);
       expect(actualListing.startTimeSec).to.equal(providedListing.startTimeSec);
       expect(actualListing.endTimeSec).to.equal(providedListing.endTimeSec);
-      expect(actualListing.startPriceAttoSci).to.equal(
-        providedListing.startPriceAttoSci
-      );
-      expect(actualListing.priceIncreases).to.equal(
-        providedListing.priceIncreases
-      );
-      expect(actualListing.priceSlopeNumerator).to.equal(
-        providedListing.priceSlopeNumerator
-      );
+      expect(actualListing.startPriceAttoSci).to.equal(providedListing.startPriceAttoSci);
+      expect(actualListing.priceIncreases).to.equal(providedListing.priceIncreases);
+      expect(actualListing.priceSlopeNumerator).to.equal(providedListing.priceSlopeNumerator);
 
       let newStartTime = providedListing.startTimeSec + 100;
       let newEndTime = 0; // change to indefinite
@@ -1703,15 +1434,12 @@ describe("Listings Contract", function () {
       expect(actualListing.priceSlopeNumerator).to.equal(newSlope);
     });
 
-    it("should restart for an evergreen listing (endTimeSec == 0), as OWNER", async function () {
+    it('should restart for an evergreen listing (endTimeSec == 0), as OWNER', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       let providedListing = await this.listNFT(tokenId, {
-        startPriceAttoSci: "10000",
-        endPriceAttoSci: "0",
+        startPriceAttoSci: '10000',
+        endPriceAttoSci: '0',
         durationSec: this.INFINITE,
       });
       expect(await this.balanceNFT(this.OWNER, tokenId)).to.equal(0);
@@ -1721,15 +1449,9 @@ describe("Listings Contract", function () {
       expect(actualListing.seller).to.equal(providedListing.seller);
       expect(actualListing.startTimeSec).to.equal(providedListing.startTimeSec);
       expect(actualListing.endTimeSec).to.equal(providedListing.endTimeSec);
-      expect(actualListing.startPriceAttoSci).to.equal(
-        providedListing.startPriceAttoSci
-      );
-      expect(actualListing.priceIncreases).to.equal(
-        providedListing.priceIncreases
-      );
-      expect(actualListing.priceSlopeNumerator).to.equal(
-        providedListing.priceSlopeNumerator
-      );
+      expect(actualListing.startPriceAttoSci).to.equal(providedListing.startPriceAttoSci);
+      expect(actualListing.priceIncreases).to.equal(providedListing.priceIncreases);
+      expect(actualListing.priceSlopeNumerator).to.equal(providedListing.priceSlopeNumerator);
 
       let newStartTime = providedListing.startTimeSec + 100;
       let newEndTime = newStartTime + 1;
@@ -1755,12 +1477,9 @@ describe("Listings Contract", function () {
       expect(actualListing.priceSlopeNumerator).to.equal(newSlope);
     });
 
-    it("should revert from any other role", async function () {
+    it('should revert from any other role', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       await this.listNFT(tokenId);
       expect(await this.balanceNFT(this.listings, tokenId)).to.equal(1);
 
@@ -1776,15 +1495,13 @@ describe("Listings Contract", function () {
           true,
           1
         );
-      }, "SELLER has denied SUPERADMIN");
+      }, 'SELLER has denied SUPERADMIN');
 
       await this.listingsAs(this.OWNER).denySuperadminControl(false);
 
       let allSigners = await ethers.getSigners();
       let notAllowed = allSigners.filter(
-        (s) =>
-          s.address != this.OWNER.address &&
-          s.address != this.SUPERADMIN.address
+        (s) => s.address != this.OWNER.address && s.address != this.SUPERADMIN.address
       );
       let f = async (s: SignerWithAddress) =>
         await this.listingsAs(s).setListing(
@@ -1796,45 +1513,39 @@ describe("Listings Contract", function () {
           false,
           10000000
         );
-      let m = "Only SELLER or SUPERADMIN";
+      let m = 'Only SELLER or SUPERADMIN';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
 
-  describe("Pausable", function () {
-    it("should pause and unpause from CEO", async function () {
+  describe('Pausable', function () {
+    it('should pause and unpause from CEO', async function () {
       let tokenId = await this.mintNextNFT();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
 
       await this.listingsAs(this.CEO).pause();
       await this.toRevert(async () => {
         await this.listNFT(tokenId, {
-          startPriceAttoSci: "1000",
-          endPriceAttoSci: "1500", // ignored
+          startPriceAttoSci: '1000',
+          endPriceAttoSci: '1500', // ignored
           durationSec: this.INFINITE,
         });
-      }, "Pausable: paused");
+      }, 'Pausable: paused');
 
       await this.listingsAs(this.CEO).unpause();
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       this.listNFT(tokenId, {
-        startPriceAttoSci: "1000",
-        endPriceAttoSci: "1500", // ignored
+        startPriceAttoSci: '1000',
+        endPriceAttoSci: '1500', // ignored
         durationSec: this.INFINITE,
       });
     });
 
-    it("should revert from any other role", async function () {
+    it('should revert from any other role', async function () {
       let allSigners = await ethers.getSigners();
       let notAllowed = allSigners.filter((s) => s.address != this.CEO.address);
       let f = async (s: SignerWithAddress) => await this.listingsAs(s).pause();
-      let m = "Only CEO";
+      let m = 'Only CEO';
       expect(await this.checkAllRoles(notAllowed, f, m));
 
       await this.listingsAs(this.CEO).pause();
@@ -1844,23 +1555,20 @@ describe("Listings Contract", function () {
     });
   });
 
-  describe("cancelAllListings", function () {
+  describe('cancelAllListings', function () {
     this.timeout(10000);
 
-    it("should revert if not paused", async function () {
+    it('should revert if not paused', async function () {
       await this.toRevert(async () => {
         await this.listingsAs(this.CEO).cancelAllListings(50);
-      }, "Pausable: not paused");
+      }, 'Pausable: not paused');
     });
 
-    it("should cancel 100 listings as CEO", async function () {
+    it('should cancel 100 listings as CEO', async function () {
       expect(await this.listings.nextListedTokenId()).to.be.equal(0);
 
       // mint 100 NFTs
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       for (let i = 0; i < 100; i++) {
         let tokenId = await this.mintNextNFT();
         await this.listNFT(tokenId);
@@ -1889,9 +1597,7 @@ describe("Listings Contract", function () {
       expect(await this.listings.nextListedTokenId()).to.be.equal(52);
 
       for (let tokenId = N1; tokenId < N1 + 100; tokenId++) {
-        expect(await this.balanceNFT(this.listings, tokenId)).to.equal(
-          tokenId < N1 + 52 ? 0 : 1
-        );
+        expect(await this.balanceNFT(this.listings, tokenId)).to.equal(tokenId < N1 + 52 ? 0 : 1);
       }
 
       expect((await this.listings.sellerListings(N1 + 20)).seller).to.equal(
@@ -1902,9 +1608,7 @@ describe("Listings Contract", function () {
       await this.listingsAs(this.CEO).cancelAllListings(10);
       expect(await this.listings.nextListedTokenId()).to.be.equal(62);
       for (let tokenId = N1; tokenId < N1 + 100; tokenId++) {
-        expect(await this.balanceNFT(this.listings, tokenId)).to.equal(
-          tokenId < N1 + 62 ? 0 : 1
-        );
+        expect(await this.balanceNFT(this.listings, tokenId)).to.equal(tokenId < N1 + 62 ? 0 : 1);
       }
 
       // withdraw the remainder (exits early without complaint)
@@ -1920,26 +1624,22 @@ describe("Listings Contract", function () {
       }
     }).timeout(20000);
 
-    it("should revert from any other role", async function () {
+    it('should revert from any other role', async function () {
       await this.listingsAs(this.CEO).pause();
       expect(await this.listings.nextListedTokenId()).to.be.equal(0);
       let allSigners = await ethers.getSigners();
       let notAllowed = allSigners.filter((s) => s.address != this.CEO.address);
-      let f = async (s: SignerWithAddress) =>
-        await this.listingsAs(s).cancelAllListings(1);
-      let m = "Only CEO";
+      let f = async (s: SignerWithAddress) => await this.listingsAs(s).cancelAllListings(1);
+      let m = 'Only CEO';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
 
-  describe("withdraw fees", function () {
-    it("should withdraw fees as CFO", async function () {
+  describe('withdraw fees', function () {
+    it('should withdraw fees as CFO', async function () {
       let balanceBefore = await this.ANYONE.getBalance();
       // mint 5 NFTs
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       for (let i = 0; i < 5; i++) {
         let tokenId = await this.mintNextNFT();
         await this.listNFT(tokenId);
@@ -1947,16 +1647,11 @@ describe("Listings Contract", function () {
       }
       let total_fees = (await this.listings.listingFee()).toNumber() * 5;
       await this.listingsAs(this.CFO).withdraw(this.ANYONE.address, total_fees);
-      expect(await this.ANYONE.getBalance()).to.equal(
-        balanceBefore.add(total_fees)
-      );
+      expect(await this.ANYONE.getBalance()).to.equal(balanceBefore.add(total_fees));
     });
 
-    it("should revert from any other role", async function () {
-      await this.tokensAs(this.OWNER).setApprovalForAll(
-        this.listings.address,
-        true
-      );
+    it('should revert from any other role', async function () {
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.listings.address, true);
       let tokenId = await this.mintNextNFT();
       await this.listNFT(tokenId);
       let one_fee = (await this.listings.listingFee()).toNumber();
@@ -1965,7 +1660,7 @@ describe("Listings Contract", function () {
       let notAllowed = allSigners.filter((s) => s.address != this.CFO.address);
       let f = async (s: SignerWithAddress) =>
         await this.listingsAs(s).withdraw(this.ANYONE.address, one_fee);
-      let m = "Only CFO";
+      let m = 'Only CFO';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });

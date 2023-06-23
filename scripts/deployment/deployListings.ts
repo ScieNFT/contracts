@@ -1,46 +1,40 @@
-import hre from "hardhat";
+import hre from 'hardhat';
 
-import process from "process";
+import process from 'process';
 var args = process.argv;
 
-import { Contract } from "ethers";
-import { Listings__factory } from "../../types/factories/contracts/Listings__factory";
+import { Contract } from 'ethers';
+import { Listings__factory } from '../../types/factories/contracts/Listings__factory';
 
-import type { Tokens as Tokens__contract } from "../../types/contracts/Tokens";
-import type { Listings as Listings__contract } from "../../types/contracts/Listings";
+import type { Tokens as Tokens__contract } from '../../types/contracts/Tokens';
+import type { Listings as Listings__contract } from '../../types/contracts/Listings';
 
-import { Nonce, Signers, Contracts } from "./deploy.service";
+import { Nonce, Signers, Contracts } from './deploy.service';
 
-import { join } from "path";
-import { readFileSync } from "fs";
+import { join } from 'path';
+import { readFileSync } from 'fs';
 
-export async function deployListings(
-  useOldContracts: boolean,
-  tokensAddress: string
-) {
+export async function deployListings(useOldContracts: boolean, tokensAddress: string) {
   if (!tokensAddress) {
-    throw new Error("deployListings must be provided with the Tokens address");
+    throw new Error('deployListings must be provided with the Tokens address');
   }
 
   let listingsFactory: Listings__factory = <Listings__factory>(
-    await hre.ethers.getContractFactory("Listings", Signers.CEO)
+    await hre.ethers.getContractFactory('Listings', Signers.CEO)
   );
 
   let envListingFee: string | undefined = process.env.DEFAULT_LISTING_FEE_GAS;
   const listingFee: number = envListingFee ? parseInt(envListingFee) : 0;
 
-  let envRoyaltyNumerator: string | undefined =
-    process.env.DEFAULT_ROYALTY_NUMERATOR;
-  const royaltyNumerator: number = envRoyaltyNumerator
-    ? parseInt(envRoyaltyNumerator)
-    : 0;
+  let envRoyaltyNumerator: string | undefined = process.env.DEFAULT_ROYALTY_NUMERATOR;
+  const royaltyNumerator: number = envRoyaltyNumerator ? parseInt(envRoyaltyNumerator) : 0;
 
   if (useOldContracts) {
     const config = hre.network.config;
-    let chainId = config.chainId ? config.chainId : "31337";
+    let chainId = config.chainId ? config.chainId : '31337';
     const content = readFileSync(
       join(__dirname, `../../deployment.config.${chainId}.json`),
-      "utf-8"
+      'utf-8'
     );
     let data = JSON.parse(content);
     console.log(`Using existing Listings Contract @ ${data.listingsAddress}`);
@@ -54,20 +48,12 @@ export async function deployListings(
     const gasBalanceCEO = await listingsFactory.signer.getBalance();
 
     const estimatedGas = await listingsFactory.signer.estimateGas(
-      listingsFactory.getDeployTransaction(
-        tokensAddress,
-        listingFee,
-        royaltyNumerator
-      )
+      listingsFactory.getDeployTransaction(tokensAddress, listingFee, royaltyNumerator)
     );
 
-    let blockLimit = (await hre.ethers.provider.getBlock("latest")).gasLimit;
+    let blockLimit = (await hre.ethers.provider.getBlock('latest')).gasLimit;
     if (estimatedGas > blockLimit) {
-      console.warn(
-        "Contract may be too big to fit in a block!",
-        estimatedGas,
-        blockLimit
-      );
+      console.warn('Contract may be too big to fit in a block!', estimatedGas, blockLimit);
     } else {
       let feeData = await hre.ethers.provider.getFeeData();
       console.log(
@@ -87,9 +73,7 @@ export async function deployListings(
     await listings.deployed();
     let balanceAfter = await Signers.CEO.getBalance();
     let actualGasUsed = balanceBefore.sub(balanceAfter);
-    console.log(
-      `Deploying Listings cost ${actualGasUsed}. CEO balance is now ${balanceAfter}`
-    );
+    console.log(`Deploying Listings cost ${actualGasUsed}. CEO balance is now ${balanceAfter}`);
 
     Contracts.listings = listings;
   }
@@ -113,9 +97,9 @@ export async function deployListings(
     Signers.SUPERADMIN.address,
   ];
   const roleNames: string[] = [
-    "TOKENS:MARKETPLACE_ROLE",
-    "LISTINGS:CFO_ROLE",
-    "LISTINGS:SUPERADMIN_ROLE",
+    'TOKENS:MARKETPLACE_ROLE',
+    'LISTINGS:CFO_ROLE',
+    'LISTINGS:SUPERADMIN_ROLE',
   ];
   for (const [i, a] of addresses.entries()) {
     let hasRole = await contracts[i].hasRole(roles[i], a);
