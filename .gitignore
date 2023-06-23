@@ -15,9 +15,6 @@ dist
 
 package-lock.json
 yarn-error.log
-tsconfig.json
-hardhat.config.cjs
-hardhat.config.ts
 
 deployment.config.json
 
