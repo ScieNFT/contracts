@@ -16,7 +16,7 @@ import { Nonce, Contracts, Signers } from './deploy.service';
 
 // optionally skip deploying the contracts again
 // -- useful for avoiding wasting gas while debugging
-const USE_DEPLOYED_CONTRACTS = true;
+const USE_DEPLOYED_CONTRACTS = process.argv.includes('--redeploy');
 
 function scale(attoSCI: BigNumberish) {
   let scale = BigNumber.from(10).pow(18);
