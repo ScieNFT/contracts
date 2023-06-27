@@ -74,8 +74,8 @@ async function main() {
   console.log('Chain ID:', hre.network.config.chainId);
 
   for (let contractName of contractNames) {
-    console.log(`${contractName}.sol was deployed to ${addressMap[contractName]}`);
-    console.log(constructorValuesMap[contractName]);
+    console.log(`${contractName}.sol was deployed to ${addressMap[contractName]}\n`);
+    //console.log(constructorValuesMap[contractName]);
 
     await run('verify:verify', {
       address: addressMap[contractName],
