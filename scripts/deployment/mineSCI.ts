@@ -1,5 +1,5 @@
 import hre from 'hardhat';
-import { BigNumber, BytesLike, Wallet, Contract } from 'ethers';
+import { BigNumber, BytesLike } from 'ethers';
 import { randomBytes } from 'crypto';
 
 import process from 'process';

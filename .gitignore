@@ -15,9 +15,6 @@ dist
 
 package-lock.json
 yarn-error.log
-tsconfig.json
-hardhat.config.cjs
-hardhat.config.ts
 
 deployment.config.json
 
@@ -27,3 +24,4 @@ reports
 pnm-cov.json
 .DS_Store
 output.txt
+deployment.config.31337.json

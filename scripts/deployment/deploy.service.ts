@@ -1,7 +1,7 @@
 import type { Tokens as Tokens__contract } from '../../types/contracts/Tokens';
 import type { Offers as Offers__contract } from '../../types/contracts/Offers';
 import type { Listings as Listings__contract } from '../../types/contracts/Listings';
-import hre from 'hardhat';
+
 import { Wallet } from 'ethers';
 
 export class Contracts {
