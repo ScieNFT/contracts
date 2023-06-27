@@ -12,6 +12,7 @@ cache
 artifacts
 abi
 dist
+flattened 
 
 package-lock.json
 yarn-error.log
