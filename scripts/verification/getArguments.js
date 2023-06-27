@@ -68,3 +68,5 @@ for (let contractName of contractNames) {
   console.log(encodedConstructorArgsWithoutPrefix);
 }
 console.log('\n');
+
+// https://abi.hashex.org/ is also useful here
