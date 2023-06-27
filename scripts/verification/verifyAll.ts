@@ -36,10 +36,10 @@ const constructorValuesMap: { [key: string]: (string | number)[] } = {
 };
 
 // Map of contract names to contract addresses
-const addressMap: { [key: string]: string[] } = {
-  Tokens: [deploymentJson.tokensAddress],
-  Offers: [deploymentJson.offersAddress],
-  Listings: [deploymentJson.listingsAddress],
+const addressMap: { [key: string]: string } = {
+  Tokens: deploymentJson.tokensAddress,
+  Offers: deploymentJson.offersAddress,
+  Listings: deploymentJson.listingsAddress,
 };
 
 // Define the contract names
@@ -53,7 +53,7 @@ async function main() {
     console.log(`${contractName}.sol was deployed to ${addressMap[contractName]}`);
     // console.log(constructorValuesMap[contractName]);
     await run('verify:verify', {
-      address: addressMap[contractName][0],
+      address: addressMap[contractName],
       constructorArguments: constructorValuesMap[contractName],
     });
   }
