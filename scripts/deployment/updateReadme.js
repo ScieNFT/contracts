@@ -28,6 +28,8 @@ fs.readFile(readmeFilePath, 'utf8', (err, data) => {
     // Read the contents of the replacement config file
     try {
       const replacementConfig = fs.readFileSync(newConfigFilePath, 'utf8');
+      console.log('New configuration:');
+      console.log(replacementConfig);
       return replacementConfig;
     } catch (err) {
       console.error(`Error reading ${newConfigFilePath}:`, err);
@@ -42,5 +44,8 @@ fs.readFile(readmeFilePath, 'utf8', (err, data) => {
       return;
     }
     console.log('Replacement completed successfully!');
+
+    // clean up extra space
+    execSync(`yarn run format`);
   });
 });
