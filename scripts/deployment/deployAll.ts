@@ -14,16 +14,12 @@ import { BigNumber, Wallet, providers, BigNumberish } from 'ethers';
 
 import { Nonce, Contracts, Signers } from './deploy.service';
 
-// optionally skip deploying the contracts again
-// -- useful for avoiding wasting gas while debugging
-const USE_DEPLOYED_CONTRACTS = process.argv.includes('--redeploy');
-
 function scale(attoSCI: BigNumberish) {
   let scale = BigNumber.from(10).pow(18);
   return BigNumber.from(attoSCI).div(scale);
 }
 
-async function main() {
+export async function deployAll(reuseOldContracts: boolean) {
   let provider = (hre as any).ethers.provider;
   const config = hre.network.config;
   let url = '';
@@ -34,7 +30,7 @@ async function main() {
     console.error('Config does not contain the expected provider URL', config);
   }
 
-  let useOldContracts = config.chainId ? USE_DEPLOYED_CONTRACTS : false;
+  let useOldContracts = config.chainId ? reuseOldContracts : false;
   if (useOldContracts) {
     console.log('Using already deployed contracts.');
   } else {
@@ -181,7 +177,7 @@ async function main() {
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  let reuseOldContracts = true;
+  deployAll(reuseOldContracts);
+}
