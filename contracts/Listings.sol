@@ -194,7 +194,7 @@ contract Listings is Pausable, ListingsInterface, ERC1155Holder, AccessControl {
             tokens.safeTransferFrom(
                 buyer,
                 seller,
-                tokens.SCI(),
+                uint256(tokens.SCI()),
                 price - royalty,
                 bytes("")
             );
@@ -210,7 +210,7 @@ contract Listings is Pausable, ListingsInterface, ERC1155Holder, AccessControl {
         tokens.safeTransferFrom(
             buyer,
             beneficiary,
-            tokens.SCI(),
+            uint256(tokens.SCI()),
             royalty,
             bytes("")
         );

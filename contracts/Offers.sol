@@ -152,7 +152,7 @@ contract Offers is Pausable, OffersInterface, ERC1155Holder, AccessControl {
             tokens.safeTransferFrom(
                 buyer,
                 address(this),
-                tokens.SCI(),
+                uint256(tokens.SCI()),
                 price,
                 bytes("")
             );
@@ -294,7 +294,7 @@ contract Offers is Pausable, OffersInterface, ERC1155Holder, AccessControl {
         tokens.safeTransferFrom(
             address(this),
             offer.buyer,
-            tokens.SCI(),
+            uint256(tokens.SCI()),
             offer.price,
             bytes("")
         );
