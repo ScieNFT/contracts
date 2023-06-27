@@ -66,7 +66,6 @@ following values to the nest RPC microservice:
   "chainId": 43113,
   "url": "https://api.avax-test.network/ext/bc/C/rpc"
 }
-
 ```
 
 This file is overwritten if the contracts are redeployed. The deployed contracts have the following
