@@ -33,7 +33,7 @@ const config: HardhatUserConfig = {
         network: 'fuji',
         chainId: 43113,
         urls: {
-          apiURL: 'https://api.avax-test.network/ext/bc/C/rpc',
+          apiURL: 'https://api-testnet.snowtrace.io/api',
           browserURL: 'https://testnet.snowtrace.io',
         },
       },
@@ -41,7 +41,7 @@ const config: HardhatUserConfig = {
         network: 'avalanche',
         chainId: 43114,
         urls: {
-          apiURL: 'https://api.avax.network/ext/bc/C/rpc',
+          apiURL: 'https://api.snowtrace.io/api',
           browserURL: 'https://snowtrace.io',
         },
       },
