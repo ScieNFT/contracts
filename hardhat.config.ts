@@ -15,48 +15,37 @@ import '@typechain/hardhat';
 import '@nomiclabs/hardhat-ethers';
 import 'solidity-coverage';
 
-import type { NetworkUserConfig } from 'hardhat/types';
-
 // Ensure that we have all the environment variables we need.
 const mnemonic = process.env.DEPLOYING_MNEMONIC;
 if (!mnemonic) {
   throw new Error('Please set your DEPLOYING_MNEMONIC in a .env file');
 }
 
-const chainIds = {
-  avalanche: 43112,
-  fuji: 43113,
-  hardhat: 31337,
-};
-
-function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
-  let config = {
-    accounts: {
-      count: 20,
-      mnemonic,
-      path: "m/44'/60'/0'/0",
-    },
-    chainId: chainIds[chain],
-    url: '',
-  };
-
-  switch (chain) {
-    case 'avalanche':
-      config.url = 'https://api.avax.network/ext/bc/C/rpc';
-      break;
-    case 'fuji':
-      config.url = 'https://api.avax-test.network/ext/bc/C/rpc';
-      break;
-  }
-  return config;
-}
-
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   etherscan: {
     apiKey: {
-      avalanche: process.env.SNOWTRACE_API_KEY || '',
+      avalanche: process.env.SNOWTRACE_API_KEY!,
+      fuji: process.env.SNOWTRACE_API_KEY!,
     },
+    customChains: [
+      {
+        network: 'fuji',
+        chainId: 43113,
+        urls: {
+          apiURL: 'https://api.avax-test.network/ext/bc/C/rpc',
+          browserURL: 'https://testnet.snowtrace.io',
+        },
+      },
+      {
+        network: 'avalanche',
+        chainId: 43114,
+        urls: {
+          apiURL: 'https://api.avax.network/ext/bc/C/rpc',
+          browserURL: 'https://snowtrace.io',
+        },
+      },
+    ],
   },
   gasReporter: {
     currency: 'USD',
@@ -68,13 +57,31 @@ const config: HardhatUserConfig = {
     src: './contracts',
   },
   networks: {
-    avalanche: getChainConfig('avalanche'),
-    fuji: getChainConfig('fuji'),
+    avalanche: {
+      accounts: {
+        count: 20,
+        mnemonic,
+        path: "m/44'/60'/0'/0",
+      },
+      gasPrice: 225000000000,
+      chainId: 43114,
+      url: 'https://api.avax.network/ext/bc/C/rpc',
+    },
+    fuji: {
+      accounts: {
+        count: 20,
+        mnemonic,
+        path: "m/44'/60'/0'/0",
+      },
+      gasPrice: 225000000000,
+      chainId: 43113,
+      url: 'https://api.avax-test.network/ext/bc/C/rpc',
+    },
     hardhat: {
       accounts: {
         mnemonic,
       },
-      chainId: chainIds.hardhat,
+      chainId: 31337,
     },
   },
   paths: {
@@ -84,7 +91,7 @@ const config: HardhatUserConfig = {
     tests: './test',
   },
   solidity: {
-    version: '0.8.17',
+    version: '0.8.20',
     settings: {
       metadata: {
         // Not including the metadata hash
