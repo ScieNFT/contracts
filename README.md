@@ -60,9 +60,9 @@ following values to the nest RPC microservice:
 
 ```json
 {
-  "tokensAddress": "0x3316B6eCf983091433B073829e42D394A4Bb1791",
-  "offersAddress": "0x0E2F8784dc05b8375661a26cA0af8cc9522631Bd",
-  "listingsAddress": "0xA459e907fD702D0e5953D6b0FF3F73bCb817Bc78",
+  "tokensAddress": "0xeD9b12638d68450894c7F60Cb60b0FD1341F62b1",
+  "offersAddress": "0x2e9b7A9f77a4fDEacb3860100463F459a4Cab872",
+  "listingsAddress": "0x9E0e98c102FfAB7090BEa236744aaAF165AE39c8",
   "chainId": 43113,
   "url": "https://api.avax-test.network/ext/bc/C/rpc"
 }

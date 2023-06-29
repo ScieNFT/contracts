@@ -1,7 +1,7 @@
 {
-  "tokensAddress": "0xE74b7850baeeCB355cFcFa3017109dBbd0f4B2AE",
-  "offersAddress": "0xF4B892e3c243c468D1A1fffBD7D94fd8ad2Fa656",
-  "listingsAddress": "0xFFABd47EB064b029f38c38Fa8022094D16DbE382",
+  "tokensAddress": "0xeD9b12638d68450894c7F60Cb60b0FD1341F62b1",
+  "offersAddress": "0x2e9b7A9f77a4fDEacb3860100463F459a4Cab872",
+  "listingsAddress": "0x9E0e98c102FfAB7090BEa236744aaAF165AE39c8",
   "chainId": 43113,
   "url": "https://api.avax-test.network/ext/bc/C/rpc"
 }

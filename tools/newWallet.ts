@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { Mnemonic } from 'avalanche';
+import { Mnemonic } from '@avalabs/avalanchejs';
 import { ethers } from 'ethers';
 
 /*
