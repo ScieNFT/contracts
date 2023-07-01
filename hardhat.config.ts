@@ -15,10 +15,38 @@ import '@typechain/hardhat';
 import '@nomiclabs/hardhat-ethers';
 import 'solidity-coverage';
 
+import type { NetworkUserConfig } from 'hardhat/types';
+
+import { recoverColdWallet } from './tools/secretShares';
 // Ensure that we have all the environment variables we need.
-const mnemonic = process.env.DEPLOYING_MNEMONIC;
-if (!mnemonic) {
-  throw new Error('Please set your DEPLOYING_MNEMONIC in a .env file');
+const mnemonic = recoverColdWallet();
+
+const chainIds = {
+  avalanche: 43112,
+  fuji: 43113,
+  hardhat: 31337,
+};
+
+function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
+  let config = {
+    accounts: {
+      count: 20,
+      mnemonic,
+      path: "m/44'/60'/0'/0",
+    },
+    chainId: chainIds[chain],
+    url: '',
+  };
+
+  switch (chain) {
+    case 'avalanche':
+      config.url = 'https://api.avax.network/ext/bc/C/rpc';
+      break;
+    case 'fuji':
+      config.url = 'https://api.avax-test.network/ext/bc/C/rpc';
+      break;
+  }
+  return config;
 }
 
 const config: HardhatUserConfig = {
@@ -81,7 +109,7 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic,
       },
-      chainId: 31337,
+      chainId: chainIds.hardhat,
     },
   },
   paths: {
@@ -91,7 +119,7 @@ const config: HardhatUserConfig = {
     tests: './test',
   },
   solidity: {
-    version: '0.8.19',
+    version: '0.8.17',
     settings: {
       metadata: {
         // Not including the metadata hash

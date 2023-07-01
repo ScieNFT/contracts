@@ -37,10 +37,10 @@ let envMintingFee = process.env.MINTING_FEE_GAS;
 let mintingFee = BigNumber.from(envMintingFee);
 
 let envListingFee = process.env.DEFAULT_LISTING_FEE_GAS;
-const listingFee = envListingFee ? parseInt(envListingFee) : 0;
+const listingFee = BigNumber.from(envListingFee);
 
 let envRoyaltyNumerator = process.env.DEFAULT_ROYALTY_NUMERATOR;
-const royaltyNumerator = envRoyaltyNumerator ? parseInt(envRoyaltyNumerator) : 0;
+const royaltyNumerator = BigNumber.from(envRoyaltyNumerator);
 
 // Map of contract names to constructor values
 const constructorValuesMap = {

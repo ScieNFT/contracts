@@ -4,4 +4,5 @@
 import { deployAll } from './deployAll';
 
 let reuseOldContracts = true;
-deployAll(reuseOldContracts);
+let skipSetup = false;
+deployAll(reuseOldContracts, skipSetup);
