@@ -1,9 +1,8 @@
 import hre from 'hardhat';
 
 import process from 'process';
-var args = process.argv;
 
-import { Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { Listings__factory } from '../../types/factories/contracts/Listings__factory';
 
 import type { Tokens as Tokens__contract } from '../../types/contracts/Tokens';
@@ -14,7 +13,11 @@ import { Nonce, Signers, Contracts } from './deploy.service';
 import { join } from 'path';
 import { readFileSync } from 'fs';
 
-export async function deployListings(useOldContracts: boolean, tokensAddress: string) {
+export async function deployListings(
+  useOldContracts: boolean,
+  tokensAddress: string,
+  skipSetup: boolean
+) {
   if (!tokensAddress) {
     throw new Error('deployListings must be provided with the Tokens address');
   }
@@ -24,10 +27,10 @@ export async function deployListings(useOldContracts: boolean, tokensAddress: st
   );
 
   let envListingFee: string | undefined = process.env.DEFAULT_LISTING_FEE_GAS;
-  const listingFee: number = envListingFee ? parseInt(envListingFee) : 0;
+  const listingFee = BigNumber.from(envListingFee);
 
   let envRoyaltyNumerator: string | undefined = process.env.DEFAULT_ROYALTY_NUMERATOR;
-  const royaltyNumerator: number = envRoyaltyNumerator ? parseInt(envRoyaltyNumerator) : 0;
+  const royaltyNumerator = BigNumber.from(envRoyaltyNumerator);
 
   if (useOldContracts) {
     const config = hre.network.config;
@@ -79,51 +82,48 @@ export async function deployListings(useOldContracts: boolean, tokensAddress: st
   }
   console.log(`>>> Listings Address = ${Contracts.listings.address}`);
 
-  // grant roles
-  console.log(`${Signers.CEO.address} has LISTINGS:CEO_ROLE as deployer`);
-  const contracts: (Tokens__contract | Listings__contract)[] = [
-    Contracts.tokens,
-    Contracts.listings,
-    Contracts.listings,
-  ];
-  const roles: string[] = [
-    await Contracts.tokens.MARKETPLACE_ROLE(),
-    await Contracts.listings.CFO_ROLE(),
-    await Contracts.listings.SUPERADMIN_ROLE(),
-  ];
-  const addresses: string[] = [
-    Contracts.listings.address,
-    Signers.CFO.address,
-    Signers.SUPERADMIN.address,
-  ];
-  const roleNames: string[] = [
-    'TOKENS:MARKETPLACE_ROLE',
-    'LISTINGS:CFO_ROLE',
-    'LISTINGS:SUPERADMIN_ROLE',
-  ];
-  for (const [i, a] of addresses.entries()) {
-    let hasRole = await contracts[i].hasRole(roles[i], a);
-    if (!hasRole) {
-      try {
-        await contracts[i].grantRole(roles[i], a, {
-          nonce: (await Nonce.CEO()).nonce,
-          gasLimit: 100000,
-        });
-        console.log(`granted ${roleNames[i]} to ${addresses[i]}`);
-      } catch (err) {
-        console.error(`failed to grant ${roleNames[i]} to ${addresses[i]}`);
-        console.error(err);
+  if (skipSetup) {
+    console.log('Skipping setup in Listings...');
+  } else {
+    // grant roles
+    console.log(`${Signers.CEO.address} has LISTINGS:CEO_ROLE as deployer`);
+    const contracts: (Tokens__contract | Listings__contract)[] = [
+      Contracts.tokens,
+      Contracts.listings,
+      Contracts.listings,
+    ];
+    const roles: string[] = [
+      await Contracts.tokens.MARKETPLACE_ROLE(),
+      await Contracts.listings.CFO_ROLE(),
+      await Contracts.listings.SUPERADMIN_ROLE(),
+    ];
+    const addresses: string[] = [
+      Contracts.listings.address,
+      Signers.CFO.address,
+      Signers.SUPERADMIN.address,
+    ];
+    const roleNames: string[] = [
+      'TOKENS:MARKETPLACE_ROLE',
+      'LISTINGS:CFO_ROLE',
+      'LISTINGS:SUPERADMIN_ROLE',
+    ];
+    for (const [i, a] of addresses.entries()) {
+      let hasRole = await contracts[i].hasRole(roles[i], a);
+      if (!hasRole) {
+        try {
+          await contracts[i].grantRole(roles[i], a, {
+            nonce: (await Nonce.CEO()).nonce,
+            gasLimit: 100000,
+          });
+          console.log(`granted ${roleNames[i]} to ${addresses[i]}`);
+        } catch (err) {
+          console.error(`failed to grant ${roleNames[i]} to ${addresses[i]}`);
+          console.error(err);
+        }
+      } else {
+        console.log(`${addresses[i]} already has ${roleNames[i]}`);
       }
-    } else {
-      console.log(`${addresses[i]} already has ${roleNames[i]}`);
     }
   }
   return Contracts.listings.address;
-}
-
-if (require.main === module) {
-  deployListings(true, args[2]).catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
 }

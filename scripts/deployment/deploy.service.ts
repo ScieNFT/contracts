@@ -19,6 +19,7 @@ export class Signers {
 export class Nonce {
   static CEO_NONCE: number;
   static CFO_NONCE: number;
+  static SUPERADMIN_NONCE: number;
 
   public static async resetCEONonce() {
     let next = await Signers.CEO.provider.getTransactionCount(Signers.CEO.address, 'pending');
@@ -50,5 +51,24 @@ export class Nonce {
       console.log(`[NONCE] providing CFO nonce = ${Nonce.CFO_NONCE}`);
     }
     return { nonce: Nonce.CFO_NONCE };
+  }
+
+  public static async resetSUPERADMINNonce() {
+    let next = await Signers.SUPERADMIN.provider.getTransactionCount(
+      Signers.SUPERADMIN.address,
+      'pending'
+    );
+    Nonce.SUPERADMIN_NONCE = next;
+    console.log(`[NONCE] set first SUPERADMIN nonce to ${Nonce.SUPERADMIN_NONCE}`);
+  }
+
+  public static async SUPERADMIN() {
+    if (!Nonce.SUPERADMIN_NONCE) {
+      await Nonce.resetSUPERADMINNonce();
+    } else {
+      Nonce.SUPERADMIN_NONCE += 1;
+      console.log(`[NONCE] providing SUPERADMIN nonce = ${Nonce.SUPERADMIN_NONCE}`);
+    }
+    return { nonce: Nonce.SUPERADMIN_NONCE };
   }
 }

@@ -8,7 +8,7 @@ import { Nonce, Signers, Contracts } from './deploy.service';
 import { join } from 'path';
 import { readFileSync } from 'fs';
 
-export async function deployTokens(useOldContracts: boolean) {
+export async function deployTokens(useOldContracts: boolean, skipSetup: boolean) {
   let tokensFactory: Tokens__factory = <Tokens__factory>(
     await hre.ethers.getContractFactory('Tokens', Signers.CEO)
   );
@@ -94,6 +94,7 @@ export async function deployTokens(useOldContracts: boolean) {
       await Nonce.CEO()
     );
     await tokens.deployed();
+
     let balanceAfter = await Signers.CEO.getBalance();
     let actualGasUsed = balanceBefore.sub(balanceAfter);
     console.log(`Deploying Tokens cost ${actualGasUsed}. CEO balance is now ${balanceAfter}`);
@@ -102,35 +103,38 @@ export async function deployTokens(useOldContracts: boolean) {
   }
   console.log(`>>> Tokens Address = ${Contracts.tokens.address}`);
 
-  // grant roles
-  console.log(`${Signers.CEO.address} has TOKENS:CEO_ROLE as deployer`);
-  const contracts: Tokens__contract[] = [Contracts.tokens, Contracts.tokens];
-  const roles: string[] = [
-    await Contracts.tokens.CFO_ROLE(),
-    await Contracts.tokens.SUPERADMIN_ROLE(),
-  ];
-  const addresses: string[] = [Signers.CFO.address, Signers.SUPERADMIN.address];
-  const roleNames: string[] = ['TOKENS:CFO_ROLE', 'TOKENS:SUPERADMIN_ROLE'];
-  for (const [i, a] of addresses.entries()) {
-    let hasRole = await contracts[i].hasRole(roles[i], a);
-    if (!hasRole) {
-      try {
-        await contracts[i].grantRole(roles[i], a, await Nonce.CEO());
-        console.log(`granted ${roleNames[i]} to ${addresses[i]}`);
-      } catch (err) {
-        console.error(`failed to grant ${roleNames[i]} to ${addresses[i]}`);
-        console.error(err);
+  if (skipSetup) {
+    console.log('Skipping setup in Tokens...');
+  } else {
+    // grant roles
+    console.log(`${Signers.CEO.address} has TOKENS:CEO_ROLE as deployer`);
+    const contracts: Tokens__contract[] = [Contracts.tokens, Contracts.tokens];
+    const roles: string[] = [
+      await Contracts.tokens.CFO_ROLE(),
+      await Contracts.tokens.SUPERADMIN_ROLE(),
+    ];
+    const addresses: string[] = [Signers.CFO.address, Signers.SUPERADMIN.address];
+    const roleNames: string[] = ['TOKENS:CFO_ROLE', 'TOKENS:SUPERADMIN_ROLE'];
+    for (const [i, a] of addresses.entries()) {
+      let hasRole = await contracts[i].hasRole(roles[i], a);
+      if (!hasRole) {
+        try {
+          await contracts[i].grantRole(roles[i], a, await Nonce.CEO());
+          console.log(`granted ${roleNames[i]} to ${addresses[i]}`);
+        } catch (err) {
+          console.error(`failed to grant ${roleNames[i]} to ${addresses[i]}`);
+          console.error(err);
+        }
+      } else {
+        console.log(`${addresses[i]} already has ${roleNames[i]}`);
       }
-    } else {
-      console.log(`${addresses[i]} already has ${roleNames[i]}`);
     }
   }
-
   return Contracts.tokens.address;
 }
 
 if (require.main === module) {
-  deployTokens(false).catch((error) => {
+  deployTokens(false, false).catch((error) => {
     console.error(error);
     process.exitCode = 1;
   });
