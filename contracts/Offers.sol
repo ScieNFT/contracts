@@ -385,6 +385,30 @@ contract Offers is Pausable, OffersInterface, ERC1155Holder, AccessControl {
     }
 
     /**
+     * @dev Withdraw SCI or NFTs from the contract address (as CFO_ROLE)
+     * @param to address that receives fees
+     * @param tokenId ERC1155 token index
+     * @param value amount to send
+     *
+     * This function is here for emergencies. We are intentionally staking
+     * SCI tokens in this contract so use with caution!
+     */
+    function withdrawTokens(
+        address to,
+        uint64 tokenId,
+        uint256 value
+    ) external {
+        require(hasRole(CFO_ROLE, msg.sender), "Only CFO");
+        require(
+            tokens.balanceOf(address(this), tokenId) >= value,
+            "Value exceeds balance"
+        );
+
+        // reentrancy risk: mitigated by limiting to CFO_ROLE
+        tokens.safeTransferFrom(address(this), to, uint256(tokenId), value, "");
+    }
+
+    /**
      * @dev Pause the contract
      */
     function pause() external {

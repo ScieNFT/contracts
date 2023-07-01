@@ -441,6 +441,41 @@ contract Listings is Pausable, ListingsInterface, ERC1155Holder, AccessControl {
     }
 
     /**
+     * @dev Withdraw SCI or NFTs from the contract address (as CFO_ROLE)
+     * @param to address that receives fees
+     * @param tokenId ERC1155 token index
+     * @param value amount to send
+     *
+     * This function is here for emergencies. We are intentionally staking
+     * NFTS in this contract so use with caution! Removing an NFT will
+     * clear any associated mappings!
+     */
+    function withdrawTokens(
+        address to,
+        uint64 tokenId,
+        uint256 value
+    ) external {
+        require(hasRole(CFO_ROLE, msg.sender), "Only CFO");
+        require(
+            tokens.balanceOf(address(this), tokenId) >= value,
+            "Value exceeds balance"
+        );
+
+        // reentrancy risk: mitigated by limiting to CFO_ROLE
+        tokens.safeTransferFrom(address(this), to, uint256(tokenId), value, "");
+
+        // check for active listings if we are withdrawing an NFT
+        if (tokenId >= uint64(tokens.FIRST_NFT())) {
+            Listing memory listing = sellerListings[tokenId];
+            if (listing.seller != address(0)) {
+                // mark listing as cancelled
+                sellerListings[tokenId].seller = address(0);
+                emitListingUpdated(tokenId);
+            }
+        }
+    }
+
+    /**
      * @dev Pause the contract
      */
     function pause() external {
