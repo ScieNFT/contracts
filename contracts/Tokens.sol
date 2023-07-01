@@ -462,6 +462,7 @@ contract Tokens is
      * @param tokenId ERC1155 token index
      * @param contentHash The target IPFS hex hash value to find in the indicated list
      * @param contentType The content list of interest (ADMIN or OWNER)
+     *
      * exposing this function makes it easier to do list traversal as a client
      */
     function getContentNodeKey(
@@ -700,6 +701,21 @@ contract Tokens is
         require(hasRole(CFO_ROLE, msg.sender), "Only CFO");
         require(address(this).balance >= value, "Value exceeds balance");
         to.transfer(value);
+    }
+
+    /**
+     * @dev Withdraw SCI sent to contract address in error (as CFO_ROLE)
+     * @param to address that receives fees
+     * @param value amount to send
+     *
+     * It is impossible to send an NFT to the contract because it will be
+     * rejected in fallback after the transfer acceptance check fails, however
+     * SCI can be sent to the contract using the ERC20 mechanism
+     */
+    function withdrawSCI(address to, uint256 value) external {
+        require(hasRole(CFO_ROLE, msg.sender), "Only CFO");
+        require(balanceOf(address(this)) >= value, "Value exceeds balance");
+        this.transfer(to, value);
     }
 
     /**

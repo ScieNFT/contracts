@@ -83,4 +83,6 @@ interface ListingsInterface {
 
     // Contract Funds Management
     function withdraw(address payable to, uint256 value) external;
+
+    function withdrawTokens(address to, uint64 tokenId, uint256 value) external;
 }

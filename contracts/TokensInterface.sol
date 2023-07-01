@@ -208,4 +208,6 @@ interface TokensInterface {
     function setMiningFee(uint256 newMiningFee) external;
 
     function withdraw(address payable to, uint256 value) external;
+
+    function withdrawSCI(address to, uint256 value) external;
 }
