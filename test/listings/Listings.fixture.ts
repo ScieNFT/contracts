@@ -8,6 +8,8 @@ import type { Listings__factory } from '../../types/factories/contracts/Listings
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { deployTokensFixture } from '../tokens/Tokens.fixture';
 
+import { BigNumber } from 'ethers';
+
 export async function deployListingsFixture(): Promise<{
   CEO: SignerWithAddress;
   CFO: SignerWithAddress;
@@ -26,10 +28,10 @@ export async function deployListingsFixture(): Promise<{
     await loadFixture(deployTokensFixture);
 
   let envListingFee: string | undefined = process.env.DEFAULT_LISTING_FEE_GAS;
-  const listingFee: number = envListingFee ? parseInt(envListingFee) : 0;
+  const listingFee = BigNumber.from(envListingFee);
 
   let envRoyaltyNumerator: string | undefined = process.env.DEFAULT_ROYALTY_NUMERATOR;
-  const royaltyNumerator: number = envRoyaltyNumerator ? parseInt(envRoyaltyNumerator) : 0;
+  const royaltyNumerator = BigNumber.from(envRoyaltyNumerator);
 
   // check gas cost for deployment
   //@ts-ignore
@@ -74,15 +76,5 @@ export async function deployListingsFixture(): Promise<{
   await listingsContractAsCEO.grantRole(await listings.CFO_ROLE(), CFO.address);
   await listingsContractAsCEO.grantRole(await listings.SUPERADMIN_ROLE(), SUPERADMIN.address);
 
-  return {
-    CEO,
-    CFO,
-    SUPERADMIN,
-    OWNER,
-    BRIDGE,
-    ANYONE,
-    EVERYONE,
-    tokens,
-    listings,
-  };
+  return { CEO, CFO, SUPERADMIN, OWNER, BRIDGE, ANYONE, EVERYONE, tokens, listings };
 }

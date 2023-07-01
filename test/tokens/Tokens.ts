@@ -12,7 +12,7 @@ import { randomBytes } from 'crypto';
 import { BigNumber, Event } from 'ethers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 
-import type { Tokens } from '../../types/contracts/Tokens';
+import { Tokens } from '../../types/contracts/Tokens';
 import { Tokens__factory } from '../../types/factories/contracts/Tokens__factory';
 
 // arbitrary HASH values
@@ -141,7 +141,7 @@ describe('Tokens Contract', function () {
             expect(await this.tokens.UNSET_FULL_BENEFIT_FLAG()).to.equal(1);
             let status = BigNumber.from(3);
             let filter = this.tokens.filters.NFTUpdated();
-            let events = await this.tokens.queryFilter(filter);
+            let events: any = await this.tokens.queryFilter(filter);
 
             // skip the check if we end up with multiple events in the same block
             if (events.length == 1) {
@@ -968,7 +968,7 @@ describe('Tokens Contract', function () {
       await this.tokensAs(this.OWNER).safeBatchTransferFrom(
         this.OWNER.address,
         this.ANYONE.address,
-        NFT_INDEXES.concat(0),
+        NFT_INDEXES.concat(await this.tokens.SCI()),
         NFT_AMOUNTS.concat(100),
         IGNORED_DATA
       );
@@ -1342,14 +1342,81 @@ describe('Tokens Contract', function () {
     it('should revert as any other role', async function () {
       let mintingFee = ethers.BigNumber.from(1234567);
       await this.tokensAs(this.CFO).setMintingFee(mintingFee);
-      await this.creditSCI(this.OWNER, 99);
       await this.tokensAs(this.OWNER)['mintNFT(bytes32)'](OWNER_HASH_1, {
         value: (await this.tokens.mintingFee()).toString(),
       });
+
       let allSigners = await ethers.getSigners();
       let notAllowed = allSigners.filter((s) => s.address != this.CFO.address);
       let f = async (s: SignerWithAddress) =>
         await this.tokensAs(s).withdraw(this.ANYONE.address, mintingFee);
+      let m = 'Only CFO';
+      expect(await this.checkAllRoles(notAllowed, f, m));
+    });
+  });
+
+  describe('withdrawSCI', function () {
+    it('should withdraw SCI from contract address as the CFO', async function () {
+      let contractAddress = this.tokens.address;
+      // provide owner with an NFT and some SCI
+      let sciId = await this.tokens.SCI();
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      await this.creditSCI(this.OWNER, 100);
+
+      // move the NFT and SCI to the contact address (a bad idea)
+
+      let abiCoder = new ethers.utils.AbiCoder();
+      let IGNORED_DATA = abiCoder.encode([], []);
+
+      // NFTs should be rejected
+      await this.toRevert(async () => {
+        await this.tokensAs(this.OWNER).safeBatchTransferFrom(
+          this.OWNER.address,
+          contractAddress,
+          [sciId, tokenId],
+          [100, 1],
+          IGNORED_DATA
+        );
+      }, 'fallback() reverts');
+
+      // move SCI using the ERC20 transfer
+      await this.tokensAs(this.OWNER).transfer(contractAddress, 100);
+      expect(await this.tokens['balanceOf(address,uint256)'](contractAddress, sciId)).to.equal(100);
+
+      // recover ERC1155 tokens from contract
+      await this.tokensAs(this.CFO).withdrawSCI(this.CFO.address, 100);
+      expect(await this.tokens['balanceOf(address,uint256)'](contractAddress, sciId)).to.equal(0);
+    });
+
+    it('should revert on insufficient funds', async function () {
+      let contractAddress = this.tokens.address;
+      // provide owner with some SCI
+      let sciId = await this.tokens.SCI();
+      await this.creditSCI(this.OWNER, 100);
+
+      // move SCI using the ERC20 transfer
+      await this.tokensAs(this.OWNER).transfer(contractAddress, 100);
+      expect(await this.tokens['balanceOf(address,uint256)'](contractAddress, sciId)).to.equal(100);
+
+      await this.toRevert(async () => {
+        await this.tokensAs(this.CFO).withdrawSCI(this.CFO.address, 100 + 1);
+      }, 'Value exceeds balance');
+    });
+
+    it('should revert as any other role', async function () {
+      let contractAddress = this.tokens.address;
+      // provide owner with some SCI
+      let sciId = await this.tokens.SCI();
+      await this.creditSCI(this.OWNER, 100);
+
+      // move SCI using the ERC20 transfer
+      await this.tokensAs(this.OWNER).transfer(contractAddress, 100);
+      expect(await this.tokens['balanceOf(address,uint256)'](contractAddress, sciId)).to.equal(100);
+
+      let allSigners = await ethers.getSigners();
+      let notAllowed = allSigners.filter((s) => s.address != this.CFO.address);
+      let f = async (s: SignerWithAddress) =>
+        await this.tokensAs(s).withdrawSCI(this.CFO.address, 100);
       let m = 'Only CFO';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
@@ -1374,6 +1441,10 @@ describe('Tokens Contract', function () {
     it('should set mining fee as the CFO', async function () {
       await this.tokensAs(this.CFO).setMiningFee(99);
       expect(await this.tokens.miningFee()).to.equal(99);
+
+      let bigMiningFee: BigNumber = BigNumber.from('2000000000000000000000');
+      await this.tokensAs(this.CFO).setMiningFee(bigMiningFee);
+      expect(await this.tokens.miningFee()).to.equal(bigMiningFee);
     });
 
     it('should revert as any other role', async function () {
@@ -1576,7 +1647,7 @@ describe('Tokens Contract', function () {
 
       await this.toRevert(async () => {
         await this.tokensAs(this.ADMIN).appendContent(tokenId, ADMIN_HASH_2, ENUM_ADMIN_CONTENT, {
-          value: ((await this.tokens.mintingFee()) + 1).toString(),
+          value: (await this.tokens.mintingFee()).add(1).toString(),
           gasLimit: 250000,
         });
       }, 'Wrong minting fee');
@@ -1926,7 +1997,7 @@ describe('Tokens Contract', function () {
 
       let tokens = this.tokensAs(this.SUPERADMIN);
 
-      let appendAdmin = async (data, prev) => {
+      let appendAdmin = async (data: string, prev: string) => {
         let tx = await tokens.superadminAppendContent(
           tokenId,
           data,
@@ -1949,7 +2020,7 @@ describe('Tokens Contract', function () {
         expect(n).to.equal(ZERO_HASH);
       };
 
-      let appendOwner = async (data, prev) => {
+      let appendOwner = async (data: string, prev: string) => {
         let tx = await tokens.superadminAppendContent(
           tokenId,
           data,

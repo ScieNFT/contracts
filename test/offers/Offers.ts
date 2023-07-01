@@ -128,11 +128,11 @@ describe('Offers Contract', function () {
 
     it('should set parameters to values in env', async function () {
       let envListingFee: string | undefined = process.env.DEFAULT_LISTING_FEE_GAS;
-      const listingFee: number = envListingFee ? parseInt(envListingFee) : 0;
+      const listingFee = BigNumber.from(envListingFee);
       expect(await this.offers.offerFee()).to.be.equal(listingFee);
 
       let envRoyaltyNumerator: string | undefined = process.env.DEFAULT_ROYALTY_NUMERATOR;
-      const royaltyNumerator: number = envRoyaltyNumerator ? parseInt(envRoyaltyNumerator) : 0;
+      const royaltyNumerator = BigNumber.from(envRoyaltyNumerator);
       expect(await this.offers.royaltyNumerator()).to.be.equal(royaltyNumerator);
     });
 
@@ -309,7 +309,7 @@ describe('Offers Contract', function () {
         'event TransferSingle(address indexed _operator, address indexed _from,  address indexed _to, uint256 _id, uint256 _value)',
       ]);
 
-      let TransferSingleEvent;
+      let TransferSingleEvent: any;
       for (let log of receipt.logs) {
         const parsed = iface.parseLog(log);
         if (parsed.name === 'TransferSingle') {
@@ -1176,7 +1176,7 @@ describe('Offers Contract', function () {
           value: (await this.offers.offerFee()).toString(),
         });
       }
-      let total_fees = (await this.offers.offerFee()).toNumber() * 5;
+      let total_fees = (await this.offers.offerFee()).mul(5);
       await this.offersAs(this.CFO).withdraw(this.BRIDGE.address, total_fees);
       expect(await this.BRIDGE.getBalance()).to.equal(balanceBefore.add(total_fees));
     });
@@ -1192,7 +1192,7 @@ describe('Offers Contract', function () {
         value: (await this.offers.offerFee()).toString(),
       });
 
-      let one_fee = (await this.offers.offerFee()).toNumber();
+      let one_fee = await this.offers.offerFee();
       let balanceBefore = await this.BRIDGE.getBalance();
 
       let allSigners = await ethers.getSigners();
@@ -1207,6 +1207,104 @@ describe('Offers Contract', function () {
 
       await this.offersAs(this.CFO).withdraw(this.BRIDGE.address, one_fee);
       expect(await this.BRIDGE.getBalance()).to.equal(balanceBefore.add(one_fee));
+    });
+  });
+
+  describe('withdrawTokens', function () {
+    it('should withdraw SCI or NFTs from contract address as the CFO', async function () {
+      let contractAddress = this.offers.address;
+      // provide owner with an NFT and some SCI
+      let sciId = await this.tokens.SCI();
+      let tokenId = await this.mintNextNFT();
+      await this.creditSCI(this.OWNER, 100);
+
+      expect(await this.tokens['balanceOf(address,uint256)'](this.OWNER.address, sciId)).to.equal(
+        100
+      );
+      expect(await this.tokens['balanceOf(address,uint256)'](this.OWNER.address, tokenId)).to.equal(
+        1
+      );
+
+      // move the NFT and SCI to the contact address (a bad idea)
+      let abiCoder = new ethers.utils.AbiCoder();
+      let IGNORED_DATA = abiCoder.encode([], []);
+
+      await this.tokensAs(this.OWNER).safeBatchTransferFrom(
+        this.OWNER.address,
+        contractAddress,
+        [sciId, tokenId],
+        [100, 1],
+        IGNORED_DATA
+      );
+
+      expect(await this.tokens['balanceOf(address,uint256)'](contractAddress, sciId)).to.equal(100);
+      expect(await this.tokens['balanceOf(address,uint256)'](contractAddress, tokenId)).to.equal(1);
+
+      // recover ERC1155 tokens from contract
+      await this.offersAs(this.CFO).withdrawTokens(this.CFO.address, tokenId, 1);
+      expect(await this.tokens['balanceOf(address,uint256)'](contractAddress, tokenId)).to.equal(0);
+
+      // recover SCI tokens from contract
+      await this.offersAs(this.CFO).withdrawTokens(this.CFO.address, sciId, 100);
+      expect(await this.tokens['balanceOf(address,uint256)'](contractAddress, sciId)).to.equal(0);
+    });
+
+    it('should revert on insufficient funds', async function () {
+      let contractAddress = this.offers.address;
+      // provide owner with an NFT and some SCI
+      let amountSCI = BigNumber.from(1234);
+      let sciId = await this.tokens.SCI();
+      let tokenId = await this.mintNextNFT();
+      await this.creditSCI(this.OWNER, amountSCI);
+
+      // move the NFT and SCI to the contact address (a bad idea)
+      let abiCoder = new ethers.utils.AbiCoder();
+      let IGNORED_DATA = abiCoder.encode([], []);
+
+      await this.tokensAs(this.OWNER).safeBatchTransferFrom(
+        this.OWNER.address,
+        contractAddress,
+        [sciId, tokenId],
+        [100, 1],
+        IGNORED_DATA
+      );
+
+      await this.toRevert(async () => {
+        await this.offersAs(this.CFO).withdrawTokens(this.CFO.address, sciId, amountSCI.add(1));
+      }, 'Value exceeds balance');
+    });
+
+    it('should revert as any other role', async function () {
+      let contractAddress = this.offers.address;
+      // provide owner with an NFT and some SCI
+      let amountSCI = BigNumber.from(12346);
+      let sciId = await this.tokens.SCI();
+      let tokenId = await this.mintNextNFT();
+      await this.creditSCI(this.OWNER, amountSCI);
+
+      // move the NFT and SCI to the contact address (a bad idea)
+      let abiCoder = new ethers.utils.AbiCoder();
+      let IGNORED_DATA = abiCoder.encode([], []);
+
+      await this.tokensAs(this.OWNER).safeBatchTransferFrom(
+        this.OWNER.address,
+        contractAddress,
+        [sciId, tokenId],
+        [100, 1],
+        IGNORED_DATA
+      );
+
+      let allSigners = await ethers.getSigners();
+      let notAllowed = allSigners.filter((s) => s.address != this.CFO.address);
+      let f = async (s: SignerWithAddress) =>
+        await this.offersAs(s).withdrawTokens(this.CFO.address, sciId, amountSCI);
+      let m = 'Only CFO';
+      expect(await this.checkAllRoles(notAllowed, f, m));
+
+      f = async (s: SignerWithAddress) =>
+        await this.offersAs(s).withdrawTokens(this.CFO.address, tokenId, 1);
+      m = 'Only CFO';
+      expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
 });
