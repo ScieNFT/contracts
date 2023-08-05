@@ -52,6 +52,8 @@ contract Tokens is
     bytes32 public constant MARKETPLACE_ROLE = keccak256("TOKENS_MARKETPLACE");
     /// @dev Service role for a contract where NFTs can be staked by a cross chain bridge
     bytes32 public constant BRIDGE_ROLE = keccak256("TOKENS_BRIDGE");
+    /// @dev Secondary role with access to superadminMintNFT
+    bytes32 public constant SUPERMINTER_ROLE = keccak256("TOKENS_SUPERMINTER");
 
     /// @dev Index of the SCI fungible token
     uint8 public constant SCI = 0;
@@ -165,7 +167,7 @@ contract Tokens is
     function emitNFTUpdated(uint64 tokenId) internal {
         emit TokensInterface.NFTUpdated(
             tokenId,
-            scienceNFTs[tokenId].status,
+            scienceNFTs[tokenId].attributes,
             ownerOf[tokenId],
             adminOf[tokenId],
             beneficiaryOf[tokenId]
@@ -260,7 +262,7 @@ contract Tokens is
      * @param tokenId ERC1155 token index
      */
     function isBlocklisted(uint64 tokenId) external view returns (bool) {
-        return (scienceNFTs[tokenId].status & uint192(BLOCKLIST_FLAG)) != 0;
+        return (scienceNFTs[tokenId].attributes & uint192(BLOCKLIST_FLAG)) != 0;
     }
 
     /**
@@ -268,7 +270,8 @@ contract Tokens is
      * @param tokenId ERC1155 token index
      */
     function isFullBenefit(uint64 tokenId) external view returns (bool) {
-        return (scienceNFTs[tokenId].status & uint192(FULL_BENEFIT_FLAG)) != 0;
+        return
+            (scienceNFTs[tokenId].attributes & uint192(FULL_BENEFIT_FLAG)) != 0;
     }
 
     /**
@@ -278,8 +281,8 @@ contract Tokens is
      */
     function willUnsetFullBenefit(uint64 tokenId) external view returns (bool) {
         return
-            (scienceNFTs[tokenId].status & uint192(UNSET_FULL_BENEFIT_FLAG)) !=
-            0;
+            (scienceNFTs[tokenId].attributes &
+                uint192(UNSET_FULL_BENEFIT_FLAG)) != 0;
     }
 
     /**
@@ -287,7 +290,7 @@ contract Tokens is
      * @param tokenId ERC1155 token index
      */
     function isBridged(uint64 tokenId) public view returns (bool) {
-        return (scienceNFTs[tokenId].status & uint192(BRIDGED_FLAG)) != 0;
+        return (scienceNFTs[tokenId].attributes & uint192(BRIDGED_FLAG)) != 0;
     }
 
     /**
@@ -356,7 +359,7 @@ contract Tokens is
      * @dev Add a new NFT to the database (internal use only)
      * @param contentHash The first CIDv1 sha256 hex hash value for the NFT, to be added as the head of the admin content list.
      * @param createdAt Publication priority timestamp uint64 (set from block.timestamp in mintNFT)
-     * @param status Full status bits
+     * @param attributes flag bits and other information
      * @param owner Address of token owner
      * @param admin Address of token admin
      * @param beneficiary Address of token beneficiary
@@ -364,7 +367,7 @@ contract Tokens is
     function createNFT(
         bytes32 contentHash,
         uint64 createdAt,
-        uint192 status,
+        uint192 attributes,
         address owner,
         address admin,
         address beneficiary
@@ -377,7 +380,7 @@ contract Tokens is
         ScienceNFT storage newNFT = scienceNFTs[tokenId];
         newNFT.adminHash = contentHash;
         newNFT.createdAt = createdAt;
-        newNFT.status = status;
+        newNFT.attributes = attributes;
 
         ownerOf[tokenId] = owner;
         adminOf[tokenId] = admin;
@@ -398,14 +401,14 @@ contract Tokens is
     /**
      * @dev Mint a new non-fungible token (from any adddress)
      * @param contentHash The first CIDv1 sha256 hex hash value for the NFT, to be added as the head of the admin content list.
-     * @param status Full status bits
+     * @param attributes flag bits and other information
      * @param owner Address of token owner
      * @param admin Address of token admin
      * @param beneficiary Address of token beneficiary
      */
     function mintNFT(
         bytes32 contentHash,
-        uint192 status,
+        uint192 attributes,
         address owner,
         address admin,
         address beneficiary
@@ -413,7 +416,14 @@ contract Tokens is
         require(msg.value == mintingFee, "Wrong minting fee");
         uint64 createdAt = uint64(block.timestamp);
 
-        createNFT(contentHash, createdAt, status, owner, admin, beneficiary);
+        createNFT(
+            contentHash,
+            createdAt,
+            attributes,
+            owner,
+            admin,
+            beneficiary
+        );
     }
 
     /**
@@ -422,13 +432,15 @@ contract Tokens is
      */
     function mintNFT(bytes32 contentHash) external payable {
         require(msg.value == mintingFee, "Wrong minting fee");
-        uint192 status = uint192(UNSET_FULL_BENEFIT_FLAG | FULL_BENEFIT_FLAG);
+        uint192 attributes = uint192(
+            UNSET_FULL_BENEFIT_FLAG | FULL_BENEFIT_FLAG
+        );
         uint64 createdAt = uint64(block.timestamp);
 
         createNFT(
             contentHash,
             createdAt,
-            status,
+            attributes,
             msg.sender,
             msg.sender,
             msg.sender
@@ -436,10 +448,10 @@ contract Tokens is
     }
 
     /**
-     * @dev Mint NFT with arbitrary parameters and no minting fee (from SUPERADMIN_ROLE)
+     * @dev Mint NFT with arbitrary parameters and no minting fee (from SUPERADMIN_ROLE or SUPERMINTER_ROLE)
      * @param contentHash The first CIDv1 sha256 hex hash value for the NFT, to be added as the head of the admin content list.
      * @param createdAt Publication priority timestamp uint64 (set from block.timestamp in mintNFT)
-     * @param status Full status bits
+     * @param attributes flag bits and other information
      * @param owner Address of token owner
      * @param admin Address of token admin
      * @param beneficiary Address of token beneficiary
@@ -447,14 +459,25 @@ contract Tokens is
     function superadminMintNFT(
         bytes32 contentHash,
         uint64 createdAt,
-        uint192 status,
+        uint192 attributes,
         address owner,
         address admin,
         address beneficiary
     ) external {
-        require(hasRole(SUPERADMIN_ROLE, msg.sender), "Only SUPERADMIN");
+        require(
+            hasRole(SUPERADMIN_ROLE, msg.sender) ||
+                hasRole(SUPERMINTER_ROLE, msg.sender),
+            "Only SUPERADMIN or SUPERMINTER"
+        );
 
-        createNFT(contentHash, createdAt, status, owner, admin, beneficiary);
+        createNFT(
+            contentHash,
+            createdAt,
+            attributes,
+            owner,
+            admin,
+            beneficiary
+        );
     }
 
     /**
@@ -620,10 +643,18 @@ contract Tokens is
         require(msg.value == mintingFee, "Wrong minting fee");
         require(!isBridged(tokenId), "NFT is bridged");
         if (contentType == ContentType.OWNER) {
-            require(balanceOf(msg.sender, tokenId) > 0, "Only OWNER");
+            address owner = ownerOf[tokenId];
+            require(
+                owner == msg.sender || isApprovedForAll(owner, msg.sender),
+                "Only OWNER or approved"
+            );
         } else {
             // contentType = ContentType.ADMIN
-            require(msg.sender == adminOf[tokenId], "Only ADMIN");
+            address admin = adminOf[tokenId];
+            require(
+                admin == msg.sender || isApprovedForAll(admin, msg.sender),
+                "Only ADMIN or approved"
+            );
         }
         appendNewContent(
             tokenId,
@@ -725,7 +756,12 @@ contract Tokens is
      */
     function setAdmin(uint64 tokenId, address newAdmin) external {
         require(isMinted(tokenId), "Invalid NFT");
-        require(msg.sender == adminOf[tokenId], "Only ADMIN");
+        address currentAdmin = adminOf[tokenId];
+        require(
+            currentAdmin == msg.sender ||
+                isApprovedForAll(currentAdmin, msg.sender),
+            "Only ADMIN or approved"
+        );
         require(!isBridged(tokenId), "NFT is bridged");
 
         adminOf[tokenId] = newAdmin;
@@ -740,7 +776,11 @@ contract Tokens is
      */
     function setBeneficiary(uint64 tokenId, address newBeneficiary) external {
         require(isMinted(tokenId), "Invalid NFT");
-        require(msg.sender == adminOf[tokenId], "Only ADMIN");
+        address admin = adminOf[tokenId];
+        require(
+            admin == msg.sender || isApprovedForAll(admin, msg.sender),
+            "Only ADMIN or approved"
+        );
         require(!isBridged(tokenId), "NFT is bridged");
 
         beneficiaryOf[tokenId] = newBeneficiary;
@@ -749,16 +789,16 @@ contract Tokens is
     }
 
     /**
-     * @dev Set the full status bits for an NFT, from SUPERADMIN_ROLE
+     * @dev Set the full attributes data for an NFT, from SUPERADMIN_ROLE
      * @param tokenId ID of an NFT
-     * @param newStatus new status bits
+     * @param newAttributes new attributes data
      */
-    function setStatus(uint64 tokenId, uint192 newStatus) external {
+    function setAttributes(uint64 tokenId, uint192 newAttributes) external {
         require(isMinted(tokenId), "Invalid NFT");
         require(hasRole(SUPERADMIN_ROLE, msg.sender), "Only SUPERADMIN");
         require(!isBridged(tokenId), "NFT is bridged");
 
-        scienceNFTs[tokenId].status = newStatus;
+        scienceNFTs[tokenId].attributes = newAttributes;
 
         emitNFTUpdated(tokenId);
     }
@@ -773,8 +813,8 @@ contract Tokens is
         require(hasRole(SUPERADMIN_ROLE, msg.sender), "Only SUPERADMIN");
         require(!isBridged(tokenId), "NFT is bridged");
 
-        if (value) scienceNFTs[tokenId].status |= uint192(BLOCKLIST_FLAG);
-        else scienceNFTs[tokenId].status &= ~(uint192(BLOCKLIST_FLAG));
+        if (value) scienceNFTs[tokenId].attributes |= uint192(BLOCKLIST_FLAG);
+        else scienceNFTs[tokenId].attributes &= ~(uint192(BLOCKLIST_FLAG));
 
         emitNFTUpdated(tokenId);
     }
@@ -786,11 +826,16 @@ contract Tokens is
      */
     function setFullBenefitFlag(uint64 tokenId, bool value) external {
         require(isMinted(tokenId), "Invalid NFT");
-        require(balanceOf(msg.sender, tokenId) > 0, "Only OWNER");
+        address owner = ownerOf[tokenId];
+        require(
+            owner == msg.sender || isApprovedForAll(owner, msg.sender),
+            "Only OWNER or approved"
+        );
         require(!isBridged(tokenId), "NFT is bridged");
 
-        if (value) scienceNFTs[tokenId].status |= uint192(FULL_BENEFIT_FLAG);
-        else scienceNFTs[tokenId].status &= ~(uint192(FULL_BENEFIT_FLAG));
+        if (value)
+            scienceNFTs[tokenId].attributes |= uint192(FULL_BENEFIT_FLAG);
+        else scienceNFTs[tokenId].attributes &= ~(uint192(FULL_BENEFIT_FLAG));
 
         emitNFTUpdated(tokenId);
     }
@@ -817,10 +862,10 @@ contract Tokens is
         require(hasRole(MARKETPLACE_ROLE, msg.sender), "Only MARKETPLACE");
         // remove FULL_BENEFIT_FLAG on marketplace transfers if the UNSET_FULL_BENEFIT_FLAG is true
         if (
-            (scienceNFTs[tokenId].status & uint192(UNSET_FULL_BENEFIT_FLAG)) !=
-            0
+            (scienceNFTs[tokenId].attributes &
+                uint192(UNSET_FULL_BENEFIT_FLAG)) != 0
         ) {
-            scienceNFTs[tokenId].status &= ~(
+            scienceNFTs[tokenId].attributes &= ~(
                 uint192((FULL_BENEFIT_FLAG | UNSET_FULL_BENEFIT_FLAG))
             );
             emitNFTUpdated(tokenId);
@@ -845,11 +890,15 @@ contract Tokens is
     function withdrawFromContract(uint64 tokenId, address bridge) external {
         require(isMinted(tokenId), "Invalid NFT");
         require(!isBridged(tokenId), "NFT is bridged");
-        require(balanceOf(msg.sender, tokenId) > 0, "Only OWNER");
+        address owner = ownerOf[tokenId];
+        require(
+            owner == msg.sender || isApprovedForAll(owner, msg.sender),
+            "Only OWNER or approved"
+        );
         require(hasRole(BRIDGE_ROLE, bridge), "Invalid BRIDGE");
 
-        safeTransferFrom(msg.sender, bridge, tokenId, 1, "");
-        scienceNFTs[tokenId].status |= uint192(BRIDGED_FLAG);
+        safeTransferFrom(owner, bridge, tokenId, 1, "");
+        scienceNFTs[tokenId].attributes |= uint192(BRIDGED_FLAG);
 
         emitNFTUpdated(tokenId);
     }
@@ -857,7 +906,7 @@ contract Tokens is
     /**
      * @dev Restores an NFT that was marked as bridged with its latest data, from BRIDGE_ROLE
      * @param tokenId ID of an NFT
-     * @param status Status info as uint192
+     * @param attributes Status info as uint192
      * @param owner Address of token owner
      * @param admin Address of token admin
      * @param beneficiary Address of token beneficiary
@@ -866,7 +915,7 @@ contract Tokens is
      */
     function restoreToContract(
         uint64 tokenId,
-        uint192 status,
+        uint192 attributes,
         address owner,
         address admin,
         address beneficiary
@@ -881,7 +930,7 @@ contract Tokens is
 
         ScienceNFT storage restoredNFT = scienceNFTs[tokenId];
 
-        restoredNFT.status = status & ~(uint192(BRIDGED_FLAG));
+        restoredNFT.attributes = attributes & ~(uint192(BRIDGED_FLAG));
         ownerOf[tokenId] = owner;
         adminOf[tokenId] = admin;
         beneficiaryOf[tokenId] = beneficiary;
