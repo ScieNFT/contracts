@@ -221,9 +221,9 @@ export async function mineSCI(tokensAddress: string, maximumMiningOperations: nu
 }
 
 async function main() {
-  let reuseOldContracts = true;
+  let true = true;
   let skipSetup = true;
-  await deployAll(reuseOldContracts, skipSetup);
+  await deployAll(true, skipSetup);
 
   let miningOperations = 128;
 

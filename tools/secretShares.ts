@@ -200,7 +200,7 @@ async function main() {
   console.log('Shares:');
   if (shares) {
     for (const share of shares) {
-      console.log(`${share[0]} => ${bnPrivateKeyToMnemonic(share[1])}\n`);
+      console.log(`DEPLOYING_SHARE_${share[0]}="${bnPrivateKeyToMnemonic(share[1])}"`);
     }
   }
   console.log('Secret recovered from shares: ', testRecovery(secret, shares));
