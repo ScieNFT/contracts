@@ -100,14 +100,12 @@ export async function mineSCI(tokensAddress: string, maximumMiningOperations: nu
     if (remainingMiningCalls.lt(2)) {
       console.log(`withdrawing gas fees back to the CEO`);
 
-      const nonce = (await Nonce.CFO()).nonce;
-
       let provider = (hre as any).ethers.provider;
       const contractBalance = await provider.getBalance(Contracts.tokens.address);
       let tx = await Contracts.tokens
         .connect(Signers.CFO)
         .withdraw(Signers.CEO.address, contractBalance, {
-          nonce: nonce,
+          nonce: (await Nonce.CFO()).nonce,
           gasLimit: 100000,
         });
 
@@ -131,13 +129,13 @@ export async function mineSCI(tokensAddress: string, maximumMiningOperations: nu
     let gasToMove = gasBalanceSUPERADMIN.sub(gasToReserve);
     if (gasToMove.gt(0)) {
       console.log(`move ${gasToMove} gas from SUPERADMIN to CEO`);
-      const nonce = (await Nonce.SUPERADMIN()).nonce;
+
       let tx = await Signers.SUPERADMIN.sendTransaction({
         to: Signers.CEO.address,
         value: gasToMove,
         gasPrice: gasPrice,
         gasLimit: txFee, // 21,000
-        nonce: nonce,
+        nonce: (await Nonce.SUPERADMIN()).nonce,
       });
       console.log(`transfer tx hash is ${tx.hash}`);
       await tx.wait();

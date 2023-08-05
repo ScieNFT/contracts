@@ -34,11 +34,10 @@ async function main() {
     if (b.accountName === 'Tokens' || b.accountName === 'Listings' || b.accountName === 'Offers') {
       if (b.gas.gt(0)) {
         console.log(`move ${b.gas} gas from ${b.accountName} to SUPERADMIN`);
-        const nonce = (await Nonce.CFO()).nonce;
         let tx = await contracts[b.accountName]
           .connect(Signers.CFO)
           .withdraw(Signers.SUPERADMIN.address, b.gas, {
-            nonce: nonce,
+            nonce: (await Nonce.CFO()).nonce,
             gasLimit: 100000,
           });
         console.log(`${b.accountName.toLowerCase()}.withdraw tx hash is ${tx.hash}`);
@@ -54,11 +53,10 @@ async function main() {
         } else if (b.accountName === 'Tokens') {
           console.log(`move ${b.sci} attoSCI from ${b.accountName} to SUPERADMIN`);
           // recover SCI accidentally sent to 'Tokens'
-          const nonce = (await Nonce.CFO()).nonce;
           let tx = await contracts[b.accountName]
             .connect(Signers.CFO)
             .withdrawSCI(Signers.SUPERADMIN.address, b.sci, {
-              nonce: nonce,
+              nonce: (await Nonce.CFO()).nonce,
               gasLimit: 100000,
             });
           console.log(`${b.accountName.toLowerCase()}.withdrawSCI tx hash is ${tx.hash}`);
@@ -66,11 +64,10 @@ async function main() {
         } else if (b.accountName === 'Listings') {
           console.log(`move ${b.sci} attoSCI from ${b.accountName} to SUPERADMIN`);
           // recover SCI accidentally sent to 'Listings'
-          const nonce = (await Nonce.CFO()).nonce;
           let tx = await contracts[b.accountName]
             .connect(Signers.CFO)
             .withdrawTokens(Signers.SUPERADMIN.address, 0, b.sci, {
-              nonce: nonce,
+              nonce: (await Nonce.CFO()).nonce,
               gasLimit: 100000,
             });
           console.log(`${b.accountName.toLowerCase()}.withdrawSCI tx hash is ${tx.hash}`);
@@ -121,13 +118,12 @@ async function main() {
   if (ceoGas.lt(coldGas)) {
     let gas = coldGas.sub(ceoGas);
     console.log(`move ${gas} gas from SUPERADMIN to CEO`);
-    const nonce = (await Nonce.SUPERADMIN()).nonce;
     let tx = await Signers.SUPERADMIN.sendTransaction({
       to: Signers.CEO.address,
       value: gas,
       gasPrice: gasPrice,
       gasLimit: txFee, // 21,000
-      nonce: nonce,
+      nonce: (await Nonce.SUPERADMIN()).nonce,
     });
     console.log(`transfer tx hash is ${tx.hash}`);
     await tx.wait();
@@ -135,13 +131,12 @@ async function main() {
   if (ceoGas.gt(coldGas)) {
     let gas = ceoGas.sub(coldGas);
     console.log(`move ${gas} gas from CEO to SUPERADMIN`);
-    const nonce = (await Nonce.CEO()).nonce;
     let tx = await Signers.CEO.sendTransaction({
       to: Signers.SUPERADMIN.address,
       value: gas,
       gasPrice: gasPrice,
       gasLimit: txFee, // 21,000
-      nonce: nonce,
+      nonce: (await Nonce.CEO()).nonce,
     });
     console.log(`transfer tx hash is ${tx.hash}`);
     await tx.wait();
@@ -150,13 +145,12 @@ async function main() {
   if (cfoGas.lt(coldGas)) {
     let gas = coldGas.sub(cfoGas);
     console.log(`move ${gas} gas from SUPERADMIN to CFO`);
-    const nonce = (await Nonce.SUPERADMIN()).nonce;
     let tx = await Signers.SUPERADMIN.sendTransaction({
       to: Signers.CFO.address,
       value: gas,
       gasPrice: gasPrice,
       gasLimit: txFee, // 21,000
-      nonce: nonce,
+      nonce: (await Nonce.SUPERADMIN()).nonce,
     });
     console.log(`transfer tx hash is ${tx.hash}`);
     await tx.wait();
@@ -164,13 +158,12 @@ async function main() {
   if (cfoGas.gt(coldGas)) {
     let gas = cfoGas.sub(coldGas);
     console.log(`move ${gas} gas from CFO to SUPERADMIN`);
-    const nonce = (await Nonce.CFO()).nonce;
     let tx = await Signers.CFO.sendTransaction({
       to: Signers.SUPERADMIN.address,
       value: gas,
       gasPrice: gasPrice,
       gasLimit: txFee, // 21,000
-      nonce: nonce,
+      nonce: (await Nonce.CFO()).nonce,
     });
     console.log(`transfer tx hash is ${tx.hash}`);
     await tx.wait();
@@ -186,9 +179,8 @@ async function main() {
   if (cfoSCI.lt(coldSCI)) {
     let sci = coldSCI.sub(cfoSCI);
     console.log(`move ${sci} SCI from SUPERADMIN to CFO`);
-    const nonce = (await Nonce.SUPERADMIN()).nonce;
     let tx = await Contracts.tokens.connect(Signers.SUPERADMIN).transfer(Signers.CFO.address, sci, {
-      nonce: nonce,
+      nonce: (await Nonce.SUPERADMIN()).nonce,
       gasLimit: 100000,
     });
     console.log(`transfer tx hash is ${tx.hash}`);
@@ -197,9 +189,8 @@ async function main() {
   if (cfoSCI.gt(coldSCI)) {
     let sci = cfoSCI.sub(coldSCI);
     console.log(`move ${sci} SCI from CFO to SUPERADMIN`);
-    const nonce = (await Nonce.CFO()).nonce;
     let tx = await Contracts.tokens.connect(Signers.CFO).transfer(Signers.SUPERADMIN.address, sci, {
-      nonce: nonce,
+      nonce: (await Nonce.CFO()).nonce,
       gasLimit: 100000,
     });
     console.log(`transfer tx hash is ${tx.hash}`);
@@ -209,9 +200,8 @@ async function main() {
   // move all CEO SCI to CFO
   if (ceoSCI.gt(0)) {
     console.log(`move ${ceoSCI} SCI from CEO to CFO`);
-    const nonce = (await Nonce.CEO()).nonce;
     let tx = await Contracts.tokens.connect(Signers.CEO).transfer(Signers.CFO.address, ceoSCI, {
-      nonce: nonce,
+      nonce: (await Nonce.CEO()).nonce,
       gasLimit: 100000,
     });
     console.log(`transfer tx hash is ${tx.hash}`);

@@ -123,7 +123,7 @@ function randomSubsetIndices(length: number, subsetSize = 3): number[] {
 const mnemonic: Mnemonic = Mnemonic.getInstance();
 const wordlist = mnemonic.getWordlists('english') as string[];
 
-export function shareToMnemonic(share: BigNumber) {
+export function bnPrivateKeyToMnemonic(share: BigNumber) {
   let entropy = share.toHexString().slice(2).padStart(64, '0');
   let m = mnemonic.entropyToMnemonic(entropy, wordlist);
   let k = mnemonic.mnemonicToEntropy(m);
@@ -162,7 +162,7 @@ export function recoverColdWallet(): string {
     return [BigNumber.from(i + 1), BigNumber.from(`0x${mnemonic.mnemonicToEntropy(m)}`)];
   });
 
-  return shareToMnemonic(recoverSecret(shares));
+  return bnPrivateKeyToMnemonic(recoverSecret(shares));
 }
 
 export function testRecovery(
@@ -195,17 +195,23 @@ async function main() {
 
   console.log(`\n`);
   console.log('Secret: ');
-  console.log(shareToMnemonic(secret));
+  console.log(bnPrivateKeyToMnemonic(secret));
   console.log(`\n`);
   console.log('Shares:');
   if (shares) {
     for (const share of shares) {
-      console.log(`${share[0]} => ${shareToMnemonic(share[1])}\n`);
+      console.log(`${share[0]} => ${bnPrivateKeyToMnemonic(share[1])}\n`);
     }
   }
   console.log('Secret recovered from shares: ', testRecovery(secret, shares));
 
-  console.log(shareToMnemonic(recoverSecret(shares)));
+  console.log(bnPrivateKeyToMnemonic(recoverSecret(shares)));
+
+  // When we use this key in ethers, these will be the first 10 signer addresses
+  for (let i: number = 0; i <= 10; i++) {
+    let child = ethers.Wallet.fromMnemonic(bnPrivateKeyToMnemonic(secret), `m/44'/60'/0'/0/${i}`);
+    console.log(i, child.getAddress());
+  }
 }
 
 // don't run main when importing this code as a module

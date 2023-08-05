@@ -24,9 +24,8 @@ async function setMiningFee(newFeeGas: BigNumber) {
   let oldFeeGas = await Contracts.tokens.miningFee();
   if (!oldFeeGas.eq(newFeeGas)) {
     console.log(`changing mining fee from ${oldFeeGas} to ${newFeeGas} gas`);
-    const nonce = (await Nonce.CFO()).nonce;
     let tx = await Contracts.tokens.connect(Signers.CFO).setMiningFee(newFeeGas, {
-      nonce: nonce,
+      nonce: (await Nonce.CFO()).nonce,
       gasLimit: 100000,
     });
     console.log(`tokens.setMiningFee ${snowtrace}${tx.hash}`);
@@ -38,9 +37,8 @@ async function setMintingFee(newFeeGas: BigNumber) {
   let oldFeeGas = await Contracts.tokens.mintingFee();
   if (!oldFeeGas.eq(newFeeGas)) {
     console.log(`changing minting fee from ${oldFeeGas} to ${newFeeGas} gas`);
-    const nonce = (await Nonce.CFO()).nonce;
     let tx = await Contracts.tokens.connect(Signers.CFO).setMintingFee(newFeeGas, {
-      nonce: nonce,
+      nonce: (await Nonce.CFO()).nonce,
       gasLimit: 100000,
     });
     console.log(`tokens.setMintingFee ${snowtrace}${tx.hash}`);
@@ -52,9 +50,8 @@ async function setOfferFee(newFeeGas: BigNumber) {
   let oldFeeGas = await Contracts.offers.offerFee();
   if (!oldFeeGas.eq(newFeeGas)) {
     console.log(`changing offer fee from ${oldFeeGas} to ${newFeeGas} gas`);
-    const nonce = (await Nonce.CFO()).nonce;
     let tx = await Contracts.offers.connect(Signers.CFO).setOfferFee(newFeeGas, {
-      nonce: nonce,
+      nonce: (await Nonce.CFO()).nonce,
       gasLimit: 100000,
     });
     console.log(`offers.setOfferFee ${snowtrace}${tx.hash}`);
@@ -66,9 +63,8 @@ async function setListingFee(newFeeGas: BigNumber) {
   let oldFeeGas = await Contracts.listings.listingFee();
   if (!oldFeeGas.eq(newFeeGas)) {
     console.log(`changing listings fee from ${oldFeeGas} to ${newFeeGas} gas`);
-    const nonce = (await Nonce.CFO()).nonce;
     let tx = await Contracts.listings.connect(Signers.CFO).setListingFee(newFeeGas, {
-      nonce: nonce,
+      nonce: (await Nonce.CFO()).nonce,
       gasLimit: 100000,
     });
     console.log(`listings.setListingFee ${snowtrace}${tx.hash}`);
