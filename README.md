@@ -1,6 +1,6 @@
 # ScieNFT Blockchain Contracts
 
-This project contains the solidity contracts used by ScieNFT.
+This project contains the solidity contracts used by ScieNFT, and a gRPC microservice using Nest.js.
 
 ### Tokens
 
@@ -46,6 +46,18 @@ In a second terminal, run the deploy script:
 yarn run deploy:local
 ```
 
+In a third terminal, start the RPC service:
+
+```shell
+yarn run nest:start:local
+```
+
+Finally, you can run the integration tests:
+
+```shell
+yarn run e2etest
+```
+
 ## Remote deployment to the Avalanche Fuji testnet
 
 Note that the `deployAll` script provides a flag to control redeploying the contracts:
@@ -60,9 +72,9 @@ following values to the nest RPC microservice:
 
 ```json
 {
-  "tokensAddress": "0x98592548c34Cc5d441aeE6925680df0629d9e1c2",
-  "offersAddress": "0x487f0d07646381e57De38DaF0f04D6Dd16d18cB5",
-  "listingsAddress": "0x388C9f1f75A40C0735226bb20dDA234Cb324d097",
+  "tokensAddress": "0x2ed1d97F7F97b2f5f4b646D12678efF822aeeB9e",
+  "offersAddress": "0x6B801a3ED9CB45A7CF052d6AC377eC4cb718cf5C",
+  "listingsAddress": "0x4E0C09b2c82BBB0A1e696943853a6253B51dF316",
   "chainId": 43113,
   "url": "https://api.avax-test.network/ext/bc/C/rpc"
 }
@@ -92,14 +104,26 @@ maintain a positive balance of AVAX gas tokens.
 
 Load testnet AVAX from the faucet at https://faucet.avax.network/
 
+### Deploying
+
+```shell
+yarn install
+yarn run build
+yarn run deploy:fuji
+yarn run nest:start:fuji
+yarn run e2etest
+```
+
 ## Remote deployment to the Avalanche C-Chain Mainnet
 
-We have not deployed our contracts to the mainnet yet. This section will be updated when our
-contracts are live.
+The mainnet ScieNFT contracts were deployed to the Avalanche C-Chain on August 4, 2023.
 
-Note that the wallet used for deploying the contract must contain sufficient mainnet AVAX tokens
-which must be puchased at an exchange.
-
-```
-(npx hardhat run --network avalanche .\scripts\deployment\deployAll.ts) wip
+```json
+{
+  "tokensAddress": "0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47",
+  "offersAddress": "0x65841098e591baff9E931700bc5C5423d7E534d3",
+  "listingsAddress": "0xeAda9C401421C00623df426b11c83e126965e1bd",
+  "chainId": 43114,
+  "url": "https://api.avax.network/ext/bc/C/rpc"
+}
 ```
