@@ -14,7 +14,9 @@
     "git-detect-case-change": "npx git-detect-case-change",
     "metrics": "npx solidity-code-metrics ./contracts/*.sol --html > metrics.html",
     "checkBalance:fuji": "npx hardhat run --network fuji tools/checkBalance.ts",
-    "checkBalance:avalanche": "npx hardhat run --network avalanche tools/checkBalance.ts"
+    "checkBalance:avalanche": "npx hardhat run --network avalanche tools/checkBalance.ts",
+    "mine:fuji": "npx hardhat run --network fuji tools/mine.ts",
+    "mine:avalanche": "npx hardhat run --network avalanche tools/mine.ts"
   },
   "description": "ScieNFT contract development",
   "directories": {

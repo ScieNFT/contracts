@@ -64,3 +64,20 @@ The production ScieNFT contracts were deployed to the Avalanche C-Chain on Augus
   "url": "https://api.avax.network/ext/bc/C/rpc"
 }
 ```
+
+## Mining SCI Tokens
+
+To mine SCI tokens, you can prove your mnemonic to your `.env` file and run the mining script:
+
+```shell
+yarn run mine:fuji
+```
+
+or to mine on the mainnet:
+
+```shell
+yarn run mine:avalanche
+```
+
+Note that your account must have sufficent AVAX tokens to cover the mining operation. You can
+request fuji testnet AVAX using the faucet at https://core.app/en/tools/testnet-faucet
