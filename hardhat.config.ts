@@ -7,6 +7,48 @@ import '@nomicfoundation/hardhat-chai-matchers';
 import * as dotenv from 'dotenv';
 dotenv.config({ path: './.env' });
 
+import { execSync } from 'child_process';
+
+function getStagingSuperadminMnemonic() {
+  try {
+    const stdout = execSync('ts-node ./tools/getStagingSuperadminMnemonic.ts');
+    return stdout.toString().trim();
+  } catch (error) {
+    console.error(`Failed to load STAG_SUPERADMIN_MNEMONIC: ${error}`);
+  }
+}
+process.env.STAG_SUPERADMIN_MNEMONIC = getStagingSuperadminMnemonic();
+
+function getProductionSuperadminMnemonic() {
+  try {
+    const stdout = execSync('ts-node ./tools/getProductionSuperadminMnemonic.ts');
+    return stdout.toString().trim();
+  } catch (error) {
+    console.error(`Failed to load PROD_SUPERADMIN_MNEMONIC: ${error}`);
+  }
+}
+process.env.PROD_SUPERADMIN_MNEMONIC = getProductionSuperadminMnemonic();
+
+function getStagingUsersMnemonic() {
+  try {
+    const stdout = execSync('ts-node ./tools/getStagingUsersMnemonic.ts');
+    return stdout.toString().trim();
+  } catch (error) {
+    console.error(`Failed to load STAG_USERS_MNEMONIC: ${error}`);
+  }
+}
+process.env.STAG_USERS_MNEMONIC = getStagingUsersMnemonic();
+
+function getProductionUsersMnemonic() {
+  try {
+    const stdout = execSync('ts-node ./tools/getProductionUsersMnemonic.ts');
+    return stdout.toString().trim();
+  } catch (error) {
+    console.error(`Failed to load PROD_USERS_MNEMONIC: ${error}`);
+  }
+}
+process.env.PROD_USERS_MNEMONIC = getProductionUsersMnemonic();
+
 import 'hardhat-gas-reporter';
 import 'hardhat-docgen';
 import 'hardhat-abi-exporter';
@@ -26,28 +68,6 @@ const chainIds = {
   fuji: 43113,
   hardhat: 31337,
 };
-
-function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
-  let config = {
-    accounts: {
-      count: 20,
-      mnemonic,
-      path: "m/44'/60'/0'/0",
-    },
-    chainId: chainIds[chain],
-    url: '',
-  };
-
-  switch (chain) {
-    case 'avalanche':
-      config.url = 'https://api.avax.network/ext/bc/C/rpc';
-      break;
-    case 'fuji':
-      config.url = 'https://api.avax-test.network/ext/bc/C/rpc';
-      break;
-  }
-  return config;
-}
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',

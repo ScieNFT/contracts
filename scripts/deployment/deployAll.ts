@@ -33,7 +33,7 @@ export async function deployAll(reuseOldContracts: boolean, skipSetup: boolean) 
   }
   let chainId = config.chainId ? config.chainId : '31337';
 
-  let useOldContracts = config.chainId ? reuseOldContracts : false;
+  let useOldContracts = reuseOldContracts;
   if (useOldContracts) {
     console.log('Using already deployed contracts.');
   } else {
@@ -45,9 +45,13 @@ export async function deployAll(reuseOldContracts: boolean, skipSetup: boolean) 
   Signers.CEO = Wallet.fromMnemonic(m, `m/44'/60'/0'/0/0`).connect(provider);
   Signers.CFO = Wallet.fromMnemonic(m, `m/44'/60'/0'/0/1`).connect(provider);
 
-  m = process.env.SUPERADMIN_MNEMONIC || '';
+  m = process.env.STAG_SUPERADMIN_MNEMONIC || '';
+  if (chainId == '43114') {
+    m = process.env.PROD_SUPERADMIN_MNEMONIC || '';
+  }
+
   if (!m) {
-    console.error('Could not find process.env.SUPERADMIN_MNEMONIC');
+    console.error('Could not find SUPERADMIN_MNEMONIC');
     throw new Error('Please set SUPERADMIN_MNEMONIC in the .env file');
   }
   Signers.SUPERADMIN = Wallet.fromMnemonic(m, `m/44'/60'/0'/0/0`).connect(provider);
@@ -98,7 +102,8 @@ export async function deployAll(reuseOldContracts: boolean, skipSetup: boolean) 
     const gasBalanceSUPERADMIN = await Signers.SUPERADMIN.getBalance();
 
     // send some gas to the CFO and to the SUPERADMIN so we can withdraw mining fees if required
-    let gasAmount = gasBalanceCEO.div(20);
+    let divisor = chainId == '31337' ? 5 : 20;
+    let gasAmount = gasBalanceCEO.div(divisor);
 
     let tx = await Signers.CEO.sendTransaction({
       to: Signers.CFO.address,
@@ -124,9 +129,11 @@ export async function deployAll(reuseOldContracts: boolean, skipSetup: boolean) 
   }
   // deploy tokens
   await deployTokens(useOldContracts, skipSetup);
+  await deployOffers(useOldContracts, Contracts.tokens.address, skipSetup);
+  await deployListings(useOldContracts, Contracts.tokens.address, skipSetup);
 
   if (!skipSetup) {
-    let miningOperations = chainId === '31337' ? 8 : 64;
+    let miningOperations = chainId == '31337' ? 2 : 64;
 
     // start mining asynchronously
     mineSCI(Contracts.tokens.address, miningOperations)
@@ -139,13 +146,7 @@ export async function deployAll(reuseOldContracts: boolean, skipSetup: boolean) 
         }
       })
       .finally(() => console.log('mining complete'));
-  }
 
-  await deployOffers(useOldContracts, Contracts.tokens.address, skipSetup);
-
-  await deployListings(useOldContracts, Contracts.tokens.address, skipSetup);
-
-  if (!skipSetup) {
     let data = JSON.stringify({
       tokensAddress: Contracts.tokens.address,
       offersAddress: Contracts.offers.address,
@@ -154,16 +155,18 @@ export async function deployAll(reuseOldContracts: boolean, skipSetup: boolean) 
       url: url,
     });
 
-    writeFileSync(join(__dirname, `../../deployment.config.${chainId}.json`), data, {
-      flag: 'w',
-    });
+    if (!useOldContracts) {
+      writeFileSync(join(__dirname, `../../deployment.config.${chainId}.json`), data, {
+        flag: 'w',
+      });
+    }
 
-    console.log('wait 10 sec for mining...');
-
+    let secondsToWait = chainId == '31337' ? 5 : 10;
+    console.log(`wait ${secondsToWait} sec for mining...`);
     // wait 10 seconds for mining and then fund the SUPERADMIN
-    await new Promise((r) => setTimeout(r, 10000));
+    await new Promise((r) => setTimeout(r, secondsToWait * 1000));
 
-    console.log('transfering SCI to SUPERADMIN...');
+    console.log('transferring SCI to SUPERADMIN...');
 
     // transfer mined SCI to the SUPERADMIN
     let balanceBefore = await Contracts.tokens['balanceOf(address)'](Signers.CFO.address);

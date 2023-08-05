@@ -1,3 +1,0 @@
-@narya-ai/=node_modules/@narya-ai/
-ds-test/=node_modules/@narya-ai/contracts/lib/forge-std/lib/ds-test/src/
-forge-std/=node_modules/@narya-ai/contracts/lib/forge-std/src/

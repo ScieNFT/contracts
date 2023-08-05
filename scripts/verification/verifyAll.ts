@@ -1,7 +1,8 @@
 // run with: npx hardhat --network fuji run scripts/verification/verifyAll.ts
 
 import { join } from 'path';
-import * as fs from 'fs';
+import { readFileSync } from 'fs';
+
 import { run } from 'hardhat';
 import dotenv from 'dotenv';
 import hre from 'hardhat';
@@ -9,8 +10,10 @@ import { BigNumber } from 'ethers';
 
 dotenv.config({ path: './.env' });
 
-const deploymentFilePath = join(__dirname, '../../deployment.config.43113.json');
-const deploymentJson = JSON.parse(fs.readFileSync(deploymentFilePath, 'utf8'));
+const config = hre.network.config;
+let chainId = config.chainId ? config.chainId : '31337';
+const deploymentFilePath = join(__dirname, `../../deployment.config.${chainId}.json`);
+const deploymentJson = JSON.parse(readFileSync(deploymentFilePath, 'utf8'));
 
 // from deployment scripts
 let uri: string | undefined = process.env.METADATA_JSON_URI;
