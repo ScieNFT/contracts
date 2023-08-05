@@ -67,7 +67,7 @@ The production ScieNFT contracts were deployed to the Avalanche C-Chain on Augus
 
 ## Mining SCI Tokens
 
-To mine SCI tokens, you can prove your mnemonic to your `.env` file and run the mining script:
+To mine SCI tokens, you can provide your mnemonic to your `.env` file and run the mining script:
 
 ```shell
 yarn run mine:fuji
