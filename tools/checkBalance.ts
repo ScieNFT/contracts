@@ -50,6 +50,20 @@ async function main() {
   const gasBalance = await USER.getBalance();
   const sciBalance = await TOKENS['balanceOf(address)'](USER.address);
   console.log(`Address ${USER.address}: ${gasBalance} attoAVAX, ${sciBalance} attoSCI`);
+
+  // report on current mining yield
+  const miningYield = await TOKENS.miningYield();
+  const miningCount = await TOKENS.miningCount();
+  console.log(`Mining will yield ${miningYield} attoSCI for the next ${miningCount} calls`);
+
+  const miningFee = await TOKENS.miningFee();
+  const miningGas = 60976;
+  const gasPrice = await USER.provider.getGasPrice();
+  const txFee = gasPrice.mul(miningGas);
+
+  const k = 10000000000;
+  const exchangeRate = parseFloat(miningFee.add(txFee).mul(k).div(miningYield).toString()) / k;
+  console.log(`The effective mining cost is ${exchangeRate} AVAX/SCI `);
 }
 
 if (require.main === module) {
