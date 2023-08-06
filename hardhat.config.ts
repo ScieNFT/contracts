@@ -27,39 +27,6 @@ const chainIds = {
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
-  etherscan: {
-    apiKey: {
-      avalanche: process.env.SNOWTRACE_API_KEY!,
-      fuji: process.env.SNOWTRACE_API_KEY!,
-    },
-    customChains: [
-      {
-        network: 'fuji',
-        chainId: 43113,
-        urls: {
-          apiURL: 'https://api-testnet.snowtrace.io/api',
-          browserURL: 'https://testnet.snowtrace.io',
-        },
-      },
-      {
-        network: 'avalanche',
-        chainId: 43114,
-        urls: {
-          apiURL: 'https://api.snowtrace.io/api',
-          browserURL: 'https://snowtrace.io',
-        },
-      },
-    ],
-  },
-  gasReporter: {
-    currency: 'USD',
-    enabled: true,
-    gasPrice: 25,
-    token: 'AVAX',
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY || '',
-    excludeContracts: [],
-    src: './contracts',
-  },
   networks: {
     avalanche: {
       accounts: {
@@ -123,11 +90,6 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 600_000 /* 10 minutes */,
-  },
-  abiExporter: {
-    runOnCompile: true,
-    flat: true,
-    clear: true,
   },
 };
 export default config;

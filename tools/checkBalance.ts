@@ -10,7 +10,7 @@ import type { Tokens as Tokens__contract } from '../types/contracts/Tokens';
 import { join } from 'path';
 import { readFileSync } from 'fs';
 
-import { Wallet } from 'ethers';
+import { Wallet, BigNumber } from 'ethers';
 
 let TOKENS: Tokens__contract;
 let USER: Wallet;
@@ -57,11 +57,20 @@ async function main() {
   console.log(`Mining will yield ${miningYield} attoSCI for the next ${miningCount} calls`);
 
   const miningFee = await TOKENS.miningFee();
+
   const miningGas = 60976;
   const gasPrice = await USER.provider.getGasPrice();
   const txFee = gasPrice.mul(miningGas);
 
+  const oneAVAX = BigNumber.from(10).pow(18);
+
   const k = 10000000000;
+  const txFeeFloat = parseFloat(txFee.mul(k).div(oneAVAX).toString()) / k;
+  console.log(`The mining transaction gas fee is currenly ${txFeeFloat} AVAX per call.`);
+
+  const miningFeeFloat = parseFloat(miningFee.mul(k).div(oneAVAX).toString()) / k;
+  console.log(`The mining fee is currenly ${miningFeeFloat} AVAX per call.`);
+
   const exchangeRate = parseFloat(miningFee.add(txFee).mul(k).div(miningYield).toString()) / k;
   console.log(`The effective mining cost is ${exchangeRate} AVAX/SCI `);
 }
