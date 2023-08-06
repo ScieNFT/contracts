@@ -32,7 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Move metrics.html to docs directory
-        run: mkdir metrics && mv metrics.html doc/metrics/index.html
+        run: mkdir ./doc/metrics && mv metrics.html ./doc/metrics/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
