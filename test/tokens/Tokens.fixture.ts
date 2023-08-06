@@ -15,6 +15,7 @@ export async function deployTokensFixture(): Promise<{
   OFFERS_CONTRACT: SignerWithAddress;
   BRIDGE: SignerWithAddress;
   ANYONE: SignerWithAddress;
+  SUPERMINTER: SignerWithAddress;
   EVERYONE: SignerWithAddress[];
   tokens: Tokens;
 }> {
@@ -52,6 +53,7 @@ export async function deployTokensFixture(): Promise<{
   let OFFERS_CONTRACT = {} as SignerWithAddress;
   let BRIDGE = {} as SignerWithAddress;
   let ANYONE = {} as SignerWithAddress;
+  let SUPERMINTER = {} as SignerWithAddress;
 
   const signers: SignerWithAddress[] = await ethers.getSigners();
   [
@@ -65,6 +67,7 @@ export async function deployTokensFixture(): Promise<{
     OFFERS_CONTRACT,
     BRIDGE,
     ANYONE,
+    SUPERMINTER,
   ] = signers;
 
   const signerNames = [
@@ -78,6 +81,7 @@ export async function deployTokensFixture(): Promise<{
     'OFFERS_CONTRACT',
     'BRIDGE',
     'ANYONE',
+    'SUPERMINTER',
   ];
 
   const w = 25;
@@ -148,6 +152,7 @@ export async function deployTokensFixture(): Promise<{
     await tokens.MARKETPLACE_ROLE(),
     await tokens.MARKETPLACE_ROLE(),
     await tokens.BRIDGE_ROLE(),
+    await tokens.SUPERMINTER_ROLE(),
   ];
   const addresses: string[] = [
     CFO.address,
@@ -155,6 +160,7 @@ export async function deployTokensFixture(): Promise<{
     LISTINGS_CONTRACT.address,
     OFFERS_CONTRACT.address,
     BRIDGE.address,
+    SUPERMINTER.address,
   ];
   const roleNames: string[] = [
     'CFO',
@@ -162,6 +168,7 @@ export async function deployTokensFixture(): Promise<{
     'LISTINGS:MARKETPLACE_ROLE',
     'OFFERS:MARKETPLACE_ROLE',
     'BRIDGE',
+    'SUPERMINTER',
   ];
 
   console.log(`--- Permissioned addresses and their roles`);
@@ -188,6 +195,7 @@ export async function deployTokensFixture(): Promise<{
     OFFERS_CONTRACT,
     BRIDGE,
     ANYONE,
+    SUPERMINTER,
     EVERYONE: signers,
     tokens,
   };

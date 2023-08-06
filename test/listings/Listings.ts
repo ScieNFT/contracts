@@ -75,7 +75,8 @@ describe('Listings Contract', function () {
               throw new Error(`unexpected success for ${s.address}`);
             })
             .catch((e: Error) => {
-              if (e.message.indexOf(expectedRejection) < 0) {
+              let matches = e.message.match(/'([^']*)'/);
+              if (!matches || matches[1] !== expectedRejection) {
                 throw e;
               }
             });
@@ -646,7 +647,7 @@ describe('Listings Contract', function () {
       expect(await this.tokens.hasRole(await this.tokens.MARKETPLACE_ROLE(), this.listings.address))
         .to.be.true;
       expect(
-        (await this.tokens.scienceNFTs(tokenId)).status.toNumber() &
+        (await this.tokens.scienceNFTs(tokenId)).attributes.toNumber() &
           (await this.tokens.UNSET_FULL_BENEFIT_FLAG())
       ).to.gt(0);
 

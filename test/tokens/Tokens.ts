@@ -66,6 +66,7 @@ describe('Tokens Contract', function () {
       this.OFFERS_CONTRACT,
       this.BRIDGE,
       this.ANYONE,
+      this.SUPERMINTER,
     ] = signers;
     const { EVERYONE, tokens } = await loadFixture(deployTokensFixture);
     this.tokens = tokens;
@@ -85,7 +86,8 @@ describe('Tokens Contract', function () {
               throw new Error(`unexpected success for ${s.address}`);
             })
             .catch((e: Error) => {
-              if (e.message.indexOf(expectedRejection) < 0) {
+              let matches = e.message.match(/'([^']*)'/);
+              if (!matches || matches[1] !== expectedRejection) {
                 throw e;
               }
             });
@@ -139,14 +141,14 @@ describe('Tokens Contract', function () {
             // observe the expected events
             expect(await this.tokens.FULL_BENEFIT_FLAG()).to.equal(2);
             expect(await this.tokens.UNSET_FULL_BENEFIT_FLAG()).to.equal(1);
-            let status = BigNumber.from(3);
+            let attributes = BigNumber.from(3);
             let filter = this.tokens.filters.NFTUpdated();
             let events: any = await this.tokens.queryFilter(filter);
 
             // skip the check if we end up with multiple events in the same block
             if (events.length == 1) {
               expect(events[0].args.tokenId).to.equal(_nextNFTIndex);
-              expect(events[0].args.status).to.equal(status);
+              expect(events[0].args.attributes).to.equal(attributes);
               expect(events[0].args.owner).to.equal(this.OWNER.address);
               expect(events[0].args.admin).to.equal(this.OWNER.address);
               expect(events[0].args.beneficiary).to.equal(this.OWNER.address);
@@ -212,6 +214,7 @@ describe('Tokens Contract', function () {
         await this.tokens.MARKETPLACE_ROLE(), // for listings
         await this.tokens.MARKETPLACE_ROLE(), // for offers
         await this.tokens.BRIDGE_ROLE(),
+        await this.tokens.SUPERMINTER_ROLE(),
       ];
       const addresses: string[] = [
         this.CFO.address,
@@ -219,6 +222,7 @@ describe('Tokens Contract', function () {
         this.LISTINGS_CONTRACT.address,
         this.OFFERS_CONTRACT.address,
         this.BRIDGE.address,
+        this.SUPERMINTER.address,
       ];
 
       for (const [i, a] of addresses.entries()) {
@@ -540,16 +544,16 @@ describe('Tokens Contract', function () {
 
   describe('superadminMintNFT', function () {
     const createdAt = BigNumber.from(1668162853);
-    const status = 11;
+    const attributes = 11;
 
     it('should mint an NFT with arbitrary values as the SUPERADMIN', async function () {
-      let status = BigNumber.from(287341290872345);
+      let attributes = BigNumber.from(287341290872345);
       let tokenId = await this.mintNFTWithOwnerAndAdmin();
 
       await this.tokensAs(this.SUPERADMIN).superadminMintNFT(
         ADMIN_HASH_1,
         createdAt,
-        status,
+        attributes,
         this.OWNER.address,
         this.ADMIN.address,
         this.BENEFICIARY.address
@@ -558,22 +562,43 @@ describe('Tokens Contract', function () {
         await this.tokens['balanceOf(address,uint256)'](this.OWNER.address, tokenId + 1)
       ).to.equal(1);
       expect((await this.tokens.scienceNFTs(tokenId + 1)).createdAt).to.equal(createdAt);
-      expect((await this.tokens.scienceNFTs(tokenId + 1)).status).to.equal(status);
+      expect((await this.tokens.scienceNFTs(tokenId + 1)).attributes).to.equal(attributes);
+    });
+
+    it('should mint an NFT with arbitrary values as the SUPERMINTER', async function () {
+      let attributes = BigNumber.from(287341290872345);
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+
+      await this.tokensAs(this.SUPERMINTER).superadminMintNFT(
+        ADMIN_HASH_1,
+        createdAt,
+        attributes,
+        this.OWNER.address,
+        this.ADMIN.address,
+        this.BENEFICIARY.address
+      );
+      expect(
+        await this.tokens['balanceOf(address,uint256)'](this.OWNER.address, tokenId + 1)
+      ).to.equal(1);
+      expect((await this.tokens.scienceNFTs(tokenId + 1)).createdAt).to.equal(createdAt);
+      expect((await this.tokens.scienceNFTs(tokenId + 1)).attributes).to.equal(attributes);
     });
 
     it('should revert as any other role', async function () {
       let allSigners = await ethers.getSigners();
-      let notAllowed = allSigners.filter((s) => s.address != this.SUPERADMIN.address);
+      let notAllowed = allSigners.filter(
+        (s) => s.address != this.SUPERADMIN.address && s.address != this.SUPERMINTER.address
+      );
       let f = async (s: SignerWithAddress) =>
         await this.tokensAs(s).superadminMintNFT(
           ADMIN_HASH_1,
           createdAt,
-          status,
+          attributes,
           this.OWNER.address,
           this.ADMIN.address,
           this.BENEFICIARY.address
         );
-      let m = 'Only SUPERADMIN';
+      let m = 'Only SUPERADMIN or SUPERMINTER';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
@@ -638,23 +663,25 @@ describe('Tokens Contract', function () {
       ).to.equal(1);
     });
 
-    it('should mint an NFT with expected status', async function () {
+    it('should mint an NFT with expected attributes', async function () {
       let tokenId = await this.mintNFTWithOwnerAndAdmin();
       await this.tokensAs(this.OWNER)['mintNFT(bytes32)'](ADMIN_HASH_1, {
         value: (await this.tokens.mintingFee()).toString(),
       });
-      let expectedStatus =
+      let expectedAttributes =
         (await this.tokens.FULL_BENEFIT_FLAG()) | (await this.tokens.UNSET_FULL_BENEFIT_FLAG());
-      expect((await this.tokens.scienceNFTs(tokenId + 1)).status).to.be.equal(expectedStatus);
+      expect((await this.tokens.scienceNFTs(tokenId + 1)).attributes).to.be.equal(
+        expectedAttributes
+      );
     });
 
     it('should mint NFT with correct minting fee for full parameter version', async function () {
       let tokenId = await this.mintNFTWithOwnerAndAdmin();
-      let status = 11;
+      let attributes = 11;
 
       await this.tokensAs(this.OWNER)['mintNFT(bytes32,uint192,address,address,address)'](
         ADMIN_HASH_1,
-        BigNumber.from(status),
+        BigNumber.from(attributes),
         this.OWNER.address,
         this.ADMIN.address,
         this.BENEFICIARY.address,
@@ -669,7 +696,7 @@ describe('Tokens Contract', function () {
       const nftBeneficiary = await this.tokens.beneficiaryOf(tokenId + 1);
 
       expect(nftData.adminHash).to.equal(ADMIN_HASH_1);
-      expect(nftData.status).to.equal(status);
+      expect(nftData.attributes).to.equal(attributes);
       expect(nftOwner).to.equal(this.OWNER.address);
       expect(nftAdmin).to.equal(this.ADMIN.address);
       expect(nftBeneficiary).to.equal(this.BENEFICIARY.address);
@@ -693,10 +720,10 @@ describe('Tokens Contract', function () {
 
     it('should emit NFTUpdated event on successful minting', async function () {
       let tokenId = await this.mintNFTWithOwnerAndAdmin();
-      let status = 11;
+      let attributes = 11;
       let tx = await this.tokensAs(this.OWNER)['mintNFT(bytes32,uint192,address,address,address)'](
         ADMIN_HASH_1,
-        BigNumber.from(status),
+        BigNumber.from(attributes),
         this.OWNER.address,
         this.ADMIN.address,
         this.BENEFICIARY.address,
@@ -713,7 +740,7 @@ describe('Tokens Contract', function () {
 
       let NFTUpdatedEvent = receipt.events.find((e: any) => e.event == 'NFTUpdated');
       expect(NFTUpdatedEvent.args.tokenId).to.equal(tokenId + 1);
-      expect(NFTUpdatedEvent.args.status).to.equal(status);
+      expect(NFTUpdatedEvent.args.attributes).to.equal(attributes);
       expect(NFTUpdatedEvent.args.owner).to.equal(await this.OWNER.getAddress());
       expect(NFTUpdatedEvent.args.admin).to.equal(await this.ADMIN.getAddress());
       expect(NFTUpdatedEvent.args.beneficiary).to.equal(await this.BENEFICIARY.getAddress());
@@ -1564,7 +1591,28 @@ describe('Tokens Contract', function () {
       let f = async (s: SignerWithAddress) =>
         await this.tokensAs(s).setAdmin(tokenId, this.ANYONE.address);
 
-      let m = 'Only ADMIN';
+      let m = 'Only ADMIN or approved';
+      expect(await this.checkAllRoles(notAllowed, f, m));
+    });
+
+    it('should change the ADMIN address as an approved operator', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      await this.tokensAs(this.ADMIN).setApprovalForAll(this.BRIDGE.address, true);
+      await this.tokensAs(this.BRIDGE).setAdmin(tokenId, this.ANYONE.address);
+      expect(await this.tokens.adminOf(tokenId)).to.equal(this.ANYONE.address);
+    });
+
+    it('should revert as any other role', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      let allSigners = await ethers.getSigners();
+      await this.tokensAs(this.ADMIN).setApprovalForAll(this.BRIDGE.address, true);
+      let notAllowed = allSigners.filter(
+        (s) => s.address != this.ADMIN.address && s.address != this.BRIDGE.address
+      );
+      let f = async (s: SignerWithAddress) =>
+        await this.tokensAs(s).setAdmin(tokenId, this.ANYONE.address);
+
+      let m = 'Only ADMIN or approved';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
@@ -1598,7 +1646,28 @@ describe('Tokens Contract', function () {
       let notAllowed = allSigners.filter((s) => s.address != this.ADMIN.address);
       let f = async (s: SignerWithAddress) =>
         await this.tokensAs(s).setBeneficiary(tokenId, this.ANYONE.address);
-      let m = 'Only ADMIN';
+      let m = 'Only ADMIN or approved';
+      expect(await this.checkAllRoles(notAllowed, f, m));
+    });
+
+    it('should change the BENEFICIARY address as an approved operator', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      await this.tokensAs(this.ADMIN).setApprovalForAll(this.BRIDGE.address, true);
+      await this.tokensAs(this.BRIDGE).setBeneficiary(tokenId, this.ANYONE.address);
+      expect(await this.tokens.beneficiaryOf(tokenId)).to.equal(this.ANYONE.address);
+    });
+
+    it('should revert as any other role', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      let allSigners = await ethers.getSigners();
+      await this.tokensAs(this.ADMIN).setApprovalForAll(this.BRIDGE.address, true);
+      let notAllowed = allSigners.filter(
+        (s) => s.address != this.ADMIN.address && s.address != this.BRIDGE.address
+      );
+      let f = async (s: SignerWithAddress) =>
+        await this.tokensAs(s).setBeneficiary(tokenId, this.ANYONE.address);
+
+      let m = 'Only ADMIN or approved';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
@@ -2136,7 +2205,7 @@ describe('Tokens Contract', function () {
           value: (await this.tokens.mintingFee()).toString(),
           gasLimit: 300000,
         });
-      let m = 'Only ADMIN';
+      let m = 'Only ADMIN or approved';
       expect(await this.checkAllRoles(notAllowed, f, m));
 
       // check owner list
@@ -2146,7 +2215,89 @@ describe('Tokens Contract', function () {
           value: (await this.tokens.mintingFee()).toString(),
           gasLimit: 300000,
         });
-      m = 'Only OWNER';
+      m = 'Only OWNER or approved';
+      expect(await this.checkAllRoles(notAllowed, f, m));
+    });
+
+    it('should allow appendContent from approved operator', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      await this.tokensAs(this.ADMIN).appendContent(tokenId, ADMIN_HASH_2, ENUM_ADMIN_CONTENT, {
+        value: (await this.tokens.mintingFee()).toString(),
+        gasLimit: 300000,
+      });
+      await this.tokensAs(this.ADMIN).setApprovalForAll(this.BRIDGE.address, true);
+      let tx1 = await this.tokensAs(this.BRIDGE).appendContent(
+        tokenId,
+        ADMIN_HASH_3,
+        ENUM_ADMIN_CONTENT,
+        {
+          value: (await this.tokens.mintingFee()).toString(),
+          gasLimit: 300000,
+        }
+      );
+      let receipt1 = await tx1.wait();
+      expect(receipt1.events?.filter((x: Event) => x.event == 'AdminContentNodeCreated')).to.not.be
+        .null;
+
+      // check owner list
+      await this.tokensAs(this.OWNER).appendContent(tokenId, OWNER_HASH_2, ENUM_OWNER_CONTENT, {
+        value: (await this.tokens.mintingFee()).toString(),
+        gasLimit: 300000,
+      });
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.BRIDGE.address, true);
+      let tx2 = await this.tokensAs(this.BRIDGE).appendContent(
+        tokenId,
+        OWNER_HASH_3,
+        ENUM_OWNER_CONTENT,
+        {
+          value: (await this.tokens.mintingFee()).toString(),
+          gasLimit: 300000,
+        }
+      );
+      let receipt2 = await tx2.wait();
+      expect(receipt2.events?.filter((x: Event) => x.event == 'OwnerContentNodeCreated')).to.not.be
+        .null;
+    });
+
+    it('should revert appendContent any other role (including operators)', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.BRIDGE.address, true);
+      await this.tokensAs(this.ADMIN).setApprovalForAll(this.BRIDGE.address, true);
+
+      let allSigners = await ethers.getSigners();
+      // admin list
+      let notAllowed = allSigners.filter(
+        (s) => s.address != this.ADMIN.address && s.address != this.BRIDGE.address
+      );
+      let f = async (s: SignerWithAddress) =>
+        await this.tokensAs(s).appendContent(
+          tokenId,
+          s.address == this.ADMIN.address ? ADMIN_HASH_2 : ADMIN_HASH_3,
+          ENUM_ADMIN_CONTENT,
+          {
+            value: (await this.tokens.mintingFee()).toString(),
+            gasLimit: 300000,
+          }
+        );
+      let m = 'Only ADMIN or approved';
+      expect(await this.checkAllRoles(notAllowed, f, m));
+
+      // check owner list
+      notAllowed = allSigners.filter(
+        (s) => s.address != this.OWNER.address && s.address != this.BRIDGE.address
+      );
+      f = async (s: SignerWithAddress) =>
+        await this.tokensAs(s).appendContent(
+          tokenId,
+          s.address == this.OWNER.address ? OWNER_HASH_2 : OWNER_HASH_3,
+          ENUM_OWNER_CONTENT,
+          {
+            value: (await this.tokens.mintingFee()).toString(),
+            gasLimit: 300000,
+          }
+        );
+      m = 'Only OWNER or approved';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
@@ -2216,7 +2367,32 @@ describe('Tokens Contract', function () {
       let notAllowed = allSigners.filter((s) => s.address != this.OWNER.address);
       let f = async (s: SignerWithAddress) =>
         await this.tokensAs(s).setFullBenefitFlag(tokenId, true);
-      let m = 'Only OWNER';
+      let m = 'Only OWNER or approved';
+      expect(await this.checkAllRoles(notAllowed, f, m));
+    });
+
+    it('should change the full benefit flag bit as an approved operator', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.BRIDGE.address, true);
+
+      expect(await this.tokens.isFullBenefit(tokenId)).to.equal(true);
+      await this.tokensAs(this.BRIDGE).setFullBenefitFlag(tokenId, false);
+      expect(await this.tokens.isFullBenefit(tokenId)).to.equal(false);
+      await this.tokensAs(this.BRIDGE).setFullBenefitFlag(tokenId, true);
+      expect(await this.tokens.isFullBenefit(tokenId)).to.equal(true);
+    });
+
+    it('should revert as any other role (including operator)', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.BRIDGE.address, true);
+
+      let allSigners = await ethers.getSigners();
+      let notAllowed = allSigners.filter(
+        (s) => s.address != this.OWNER.address && s.address != this.BRIDGE.address
+      );
+      let f = async (s: SignerWithAddress) =>
+        await this.tokensAs(s).setFullBenefitFlag(tokenId, true);
+      let m = 'Only OWNER or approved';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
   });
@@ -2250,7 +2426,30 @@ describe('Tokens Contract', function () {
       let f = async (s: SignerWithAddress) =>
         await this.tokensAs(s).withdrawFromContract(tokenId, this.BRIDGE.address);
 
-      let m = 'Only OWNER';
+      let m = 'Only OWNER or approved';
+      expect(await this.checkAllRoles(notAllowed, f, m));
+    });
+
+    it('should change the bridged bit as OWNER approved operator', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.ANYONE.address, true);
+
+      await this.tokensAs(this.ANYONE).withdrawFromContract(tokenId, this.BRIDGE.address);
+      expect(await this.tokens.isBridged(tokenId)).to.equal(true);
+    });
+
+    it('should revert as any other role (including approved operator)', async function () {
+      let tokenId = await this.mintNFTWithOwnerAndAdmin();
+      await this.tokensAs(this.OWNER).setApprovalForAll(this.ANYONE.address, true);
+
+      let allSigners = await ethers.getSigners();
+      let notAllowed = allSigners.filter(
+        (s) => s.address != this.OWNER.address && s.address != this.ANYONE.address
+      );
+      let f = async (s: SignerWithAddress) =>
+        await this.tokensAs(s).withdrawFromContract(tokenId, this.BRIDGE.address);
+
+      let m = 'Only OWNER or approved';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });
 
@@ -2286,13 +2485,13 @@ describe('Tokens Contract', function () {
       }, 'NFT is bridged');
     });
 
-    it('should revert set status when bridged', async function () {
+    it('should revert set attributes when bridged', async function () {
       let tokenId = await this.mintNFTWithOwnerAndAdmin();
       await this.tokensAs(this.OWNER).withdrawFromContract(tokenId, this.BRIDGE.address);
       expect(await this.tokens.isBridged(tokenId)).to.equal(true);
 
       await this.toRevert(async () => {
-        await this.tokensAs(this.SUPERADMIN).setStatus(
+        await this.tokensAs(this.SUPERADMIN).setAttributes(
           tokenId,
           '0x' + randomBytes(24).toString('hex')
         );
@@ -2389,13 +2588,13 @@ describe('Tokens Contract', function () {
     it('should revert restoring to contract when expecting failure', async function () {
       let tokenId = await this.mintNFTWithOwnerAndAdmin();
       const createdAt = BigNumber.from(1668162853);
-      let status = BigNumber.from(0xfffffff);
+      let attributes = BigNumber.from(0xfffffff);
 
       // require NFT to be on bridge
       await this.toRevert(async () => {
         await this.tokensAs(this.BRIDGE).restoreToContract(
           tokenId,
-          status,
+          attributes,
           this.CEO.address, // new owner
           this.CFO.address, // new admin
           this.OWNER.address // new beneficiary
@@ -2408,7 +2607,7 @@ describe('Tokens Contract', function () {
       await this.toRevert(async () => {
         await this.tokensAs(this.BRIDGE).restoreToContract(
           tokenId + 1,
-          status,
+          attributes,
           this.CEO.address, // new owner
           this.CFO.address, // new admin
           this.OWNER.address // new beneficiary
@@ -2419,7 +2618,7 @@ describe('Tokens Contract', function () {
       await this.toRevert(async () => {
         await this.tokensAs(this.CEO).restoreToContract(
           tokenId,
-          status,
+          attributes,
           this.CEO.address, // new owner
           this.CFO.address, // new admin
           this.OWNER.address // new beneficiary
@@ -2432,7 +2631,7 @@ describe('Tokens Contract', function () {
       await this.toRevert(async () => {
         await this.tokensAs(this.BRIDGE).restoreToContract(
           tokenId,
-          status,
+          attributes,
           address0, // new owner
           this.CFO.address, // new admin
           this.OWNER.address // new beneficiary
@@ -2462,23 +2661,23 @@ describe('Tokens Contract', function () {
       expect(await this.tokens.isBridged(tokenId)).to.equal(true);
 
       // BRIDGE_FLAG should be forced false during restore
-      let status = BigNumber.from(0xfffffff | (await this.tokens.BRIDGED_FLAG()));
+      let attributes = BigNumber.from(0xfffffff | (await this.tokens.BRIDGED_FLAG()));
       await this.tokensAs(this.BRIDGE).restoreToContract(
         tokenId,
-        status,
+        attributes,
         this.CEO.address, // new owner
         this.CFO.address, // new admin
         this.OWNER.address // new beneficiary
       );
 
-      let expectedStatus = BigNumber.from(0xfffffff & ~(await this.tokens.BRIDGED_FLAG()));
+      let expectedAttributes = BigNumber.from(0xfffffff & ~(await this.tokens.BRIDGED_FLAG()));
 
       expect(await this.tokens['balanceOf(address,uint256)'](this.CEO.address, tokenId)).to.equal(
         1
       );
 
       expect((await this.tokens.scienceNFTs(tokenId)).adminHash).to.equal(OWNER_HASH_1);
-      expect((await this.tokens.scienceNFTs(tokenId)).status).to.equal(expectedStatus);
+      expect((await this.tokens.scienceNFTs(tokenId)).attributes).to.equal(expectedAttributes);
       expect((await this.tokens.scienceNFTs(tokenId)).createdAt).to.equal(createdAt);
       expect(await this.tokens.adminOf(tokenId)).to.equal(this.CFO.address);
       expect(await this.tokens.beneficiaryOf(tokenId)).to.equal(this.OWNER.address);
@@ -2491,14 +2690,14 @@ describe('Tokens Contract', function () {
       expect(await this.tokens.isBridged(tokenId)).to.equal(true);
 
       const createdAt = BigNumber.from(1668162853);
-      let status = 289087;
+      let attributes = 289087;
 
       let allSigners = await ethers.getSigners();
       let notAllowed = allSigners.filter((s) => s.address != this.BRIDGE.address);
       let f = async (s: SignerWithAddress) =>
         await this.tokensAs(s).restoreToContract(
           tokenId,
-          status,
+          attributes,
           this.CEO.address, //owner
           this.CFO.address, //admin
           this.OWNER.address //beneficiary
@@ -2537,7 +2736,7 @@ describe('Tokens Contract', function () {
       // FULL_BENEFIT_FLAG after a marketplace sale when UNSET_FULL_BENEFIT_FLAG is true
       let NFTUpdatedEvent = receipt.events.find((e: any) => e.event == 'NFTUpdated');
       expect(NFTUpdatedEvent.args.tokenId).to.equal(tokenId);
-      expect(NFTUpdatedEvent.args.status).to.equal(0); // status bits have been cleared
+      expect(NFTUpdatedEvent.args.attributes).to.equal(0); // attributes data have been cleared
       expect(NFTUpdatedEvent.args.owner).to.equal(await this.OWNER.getAddress());
       expect(NFTUpdatedEvent.args.admin).to.equal(await this.ADMIN.getAddress());
       expect(NFTUpdatedEvent.args.beneficiary).to.equal(await this.OWNER.getAddress());
@@ -2594,8 +2793,8 @@ describe('Tokens Contract', function () {
     });
   });
 
-  describe('setStatus', function () {
-    it('should change status as the SUPERADMIN', async function () {
+  describe('setAttributes', function () {
+    it('should change attributes as the SUPERADMIN', async function () {
       let tokenId = await this.mintNFTWithOwnerAndAdmin();
       await this.tokensAs(this.OWNER)['mintNFT(bytes32)'](OWNER_HASH_1, {
         value: (await this.tokens.mintingFee()).toString(),
@@ -2604,21 +2803,21 @@ describe('Tokens Contract', function () {
 
       let arbitraryLongStatus = BigNumber.from('0xdeadbeefdeadbeefdeadbeef');
       let bridgeFlag = BigNumber.from(await this.tokens.BRIDGED_FLAG());
-      let status1 = arbitraryLongStatus.shl(bridgeFlag.toNumber()); // this forces BRIDGED_FLAG to zero
+      let attributes1 = arbitraryLongStatus.shl(bridgeFlag.toNumber()); // this forces BRIDGED_FLAG to zero
 
-      await this.tokensAs(this.SUPERADMIN).setStatus(tokenId, status1);
-      expect((await this.tokens.scienceNFTs(tokenId)).status).to.equal(status1);
+      await this.tokensAs(this.SUPERADMIN).setAttributes(tokenId, attributes1);
+      expect((await this.tokens.scienceNFTs(tokenId)).attributes).to.equal(attributes1);
 
-      let status2 = '0x' + randomBytes(24).toString('hex');
-      await this.tokensAs(this.SUPERADMIN).setStatus(tokenId, status2);
-      expect((await this.tokens.scienceNFTs(tokenId)).status).to.equal(status2);
+      let attributes2 = '0x' + randomBytes(24).toString('hex');
+      await this.tokensAs(this.SUPERADMIN).setAttributes(tokenId, attributes2);
+      expect((await this.tokens.scienceNFTs(tokenId)).attributes).to.equal(attributes2);
     });
 
     it('should revert for an NFT that is not minted', async function () {
       let tokenId = await this.mintNFTWithOwnerAndAdmin();
       await this.toRevert(async () => {
         // should allow up to 48 hex chars
-        await this.tokensAs(this.SUPERADMIN).setStatus(
+        await this.tokensAs(this.SUPERADMIN).setAttributes(
           tokenId + 1,
           '0x' + randomBytes(24).toString('hex')
         );
@@ -2631,11 +2830,12 @@ describe('Tokens Contract', function () {
         value: (await this.tokens.mintingFee()).toString(),
       });
       tokenId++;
-      let status = BigNumber.from(0xdeadbeef);
+      let attributes = BigNumber.from(0xdeadbeef);
 
       let allSigners = await ethers.getSigners();
       let notAllowed = allSigners.filter((s) => s.address != this.SUPERADMIN.address);
-      let f = async (s: SignerWithAddress) => await this.tokensAs(s).setStatus(tokenId, status);
+      let f = async (s: SignerWithAddress) =>
+        await this.tokensAs(s).setAttributes(tokenId, attributes);
       let m = 'Only SUPERADMIN';
       expect(await this.checkAllRoles(notAllowed, f, m));
     });

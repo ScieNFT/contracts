@@ -15,7 +15,16 @@ A marketplace contract that holds ERC1155 NFTs for sale.
 
 A marketplace contract that holds fungible tokens on offer for an NFT.
 
-## Unit Tests
+## Running the Unit Tests
+
+You must first setup the deployment key shares in your .env file:
+
+```shell
+npx ts-node ./tools/secretShares.ts
+```
+
+This will generate a new private key and print a set of six shares that you can copy and paste into
+your .env file.
 
 To run the unit tests on the contracts:
 
@@ -24,11 +33,7 @@ yarn install
 yarn run test
 ```
 
-To measure coverage, use `yarn run coverage`.
-
-Note that 100% branch coverage is only possible for the Tokens contract if the `testInternal`
-function is uncommented. This fuction exposes private methods so that we can verify that these
-functions revert in some circumstances.
+To report coverage, use `yarn run coverage`.
 
 ## Local deployment to the HardHat blockchain (31337)
 
@@ -46,60 +51,33 @@ In a second terminal, run the deploy script:
 yarn run deploy:local
 ```
 
-## Remote deployment to the Avalanche Fuji testnet
+## Live contracts on the Avalanche C-Chain Mainnet
 
-Note that the `deployAll` script provides a flag to control redeploying the contracts:
-
-```typescript
-const USE_DEPLOYED_CONTRACTS = true;
-```
-
-Unless you are testing changes to the solidity code, you should be able to make use of contracts
-previously deployed to the Fuji Testnet. The file `deployment.config.43113.json` provides the
-following values to the nest RPC microservice:
+The production ScieNFT contracts were deployed to the Avalanche C-Chain on August 4, 2023.
 
 ```json
 {
-  "tokensAddress": "0x98592548c34Cc5d441aeE6925680df0629d9e1c2",
-  "offersAddress": "0x487f0d07646381e57De38DaF0f04D6Dd16d18cB5",
-  "listingsAddress": "0x388C9f1f75A40C0735226bb20dDA234Cb324d097",
-  "chainId": 43113,
-  "url": "https://api.avax-test.network/ext/bc/C/rpc"
+  "tokensAddress": "0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47",
+  "offersAddress": "0x65841098e591baff9E931700bc5C5423d7E534d3",
+  "listingsAddress": "0xeAda9C401421C00623df426b11c83e126965e1bd",
+  "chainId": 43114,
+  "url": "https://api.avax.network/ext/bc/C/rpc"
 }
 ```
 
-This file is overwritten if the contracts are redeployed. The deployed contracts have the following
-roles:
+## Mining SCI Tokens
 
-```
-TOKENS:CEO_ROLE           0x574B8c3df7413c5873F99422db020835712e9770
-TOKENS:CFO_ROLE           0x16AAC494f71c836034B4e8e8AB09BF45a9C8f68A
-TOKENS:SUPERADMIN_ROLE    0xB86966AaE3144b21d564C1460Ac11d2EA4893793
-TOKENS:MARKETPLACE_ROLE   0x0E2F8784dc05b8375661a26cA0af8cc9522631Bd
-TOKENS:MARKETPLACE_ROLE   0xA459e907fD702D0e5953D6b0FF3F73bCb817Bc78
-OFFERS:CEO_ROLE           0x574B8c3df7413c5873F99422db020835712e9770
-OFFERS:CFO_ROLE           0x16AAC494f71c836034B4e8e8AB09BF45a9C8f68A
-OFFERS:SUPERADMIN_ROLE    0xB86966AaE3144b21d564C1460Ac11d2EA4893793
-LISTINGS:CEO_ROLE         0x574B8c3df7413c5873F99422db020835712e9770
-LISTINGS:CFO_ROLE         0x16AAC494f71c836034B4e8e8AB09BF45a9C8f68A
-LISTINGS:SUPERADMIN_ROLE  0xB86966AaE3144b21d564C1460Ac11d2EA4893793
+To mine SCI tokens, you can provide your mnemonic to your `.env` file and run the mining script:
+
+```shell
+yarn run mine:fuji
 ```
 
-The SUPERADMIN_ROLE is used to send transactions on behalf of custodied user wallets and must
-maintain a positive balance of AVAX gas tokens.
+or to mine on the mainnet:
 
-### TestNet Gas Tokens
-
-Load testnet AVAX from the faucet at https://faucet.avax.network/
-
-## Remote deployment to the Avalanche C-Chain Mainnet
-
-We have not deployed our contracts to the mainnet yet. This section will be updated when our
-contracts are live.
-
-Note that the wallet used for deploying the contract must contain sufficient mainnet AVAX tokens
-which must be puchased at an exchange.
-
+```shell
+yarn run mine:avalanche
 ```
-(npx hardhat run --network avalanche .\scripts\deployment\deployAll.ts) wip
-```
+
+Note that your account must have sufficent AVAX tokens to cover the mining operation. You can
+request fuji testnet AVAX using the faucet at https://core.app/en/tools/testnet-faucet

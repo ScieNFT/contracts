@@ -19,12 +19,12 @@ interface TokensInterface {
      * the ownerContent list = keccak256(tokenId, adminHash, ContentType.OWNER)
      *
      * @param createdAt Unix epoch timestamp recording the priority date for the NFT
-     * @param status Efficient storage of flag bits and other information
+     * @param attributes Efficient storage of flag bits and other information
      */
     struct ScienceNFT {
         bytes32 adminHash;
         uint64 createdAt;
-        uint192 status;
+        uint192 attributes;
     }
 
     /**
@@ -71,7 +71,7 @@ interface TokensInterface {
     event MiningIntervalSet(uint32 interval);
     event NFTUpdated(
         uint64 indexed tokenId,
-        uint192 status,
+        uint192 attributes,
         address indexed owner,
         address admin,
         address indexed beneficiary
@@ -101,7 +101,7 @@ interface TokensInterface {
 
     function mintNFT(
         bytes32 data,
-        uint192 status,
+        uint192 attributes,
         address owner,
         address admin,
         address beneficiary
@@ -110,7 +110,7 @@ interface TokensInterface {
     function superadminMintNFT(
         bytes32 data,
         uint64 createdAt,
-        uint192 status,
+        uint192 attributes,
         address owner,
         address admin,
         address beneficiary
@@ -174,14 +174,14 @@ interface TokensInterface {
 
     function setFullBenefitFlag(uint64 tokenId, bool value) external;
 
-    function setStatus(uint64 tokenId, uint192 newStatus) external;
+    function setAttributes(uint64 tokenId, uint192 newAttributes) external;
 
     // Transfer of NFTs to and from bridge contracts.
     function withdrawFromContract(uint64 tokenId, address bridge) external;
 
     function restoreToContract(
         uint64 tokenId,
-        uint192 status,
+        uint192 attributes,
         address owner,
         address admin,
         address beneficiary

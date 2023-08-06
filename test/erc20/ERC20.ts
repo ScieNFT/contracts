@@ -47,7 +47,8 @@ describe('Tokens IERC20 Implementation', function () {
               throw new Error(`unexpected success for ${s.address}`);
             })
             .catch((e: Error) => {
-              if (e.message.indexOf(expectedRejection) < 0) {
+              let matches = e.message.match(/'([^']*)'/);
+              if (!matches || matches[1] !== expectedRejection) {
                 throw e;
               }
             });

@@ -15,8 +15,6 @@ import '@typechain/hardhat';
 import '@nomiclabs/hardhat-ethers';
 import 'solidity-coverage';
 
-import type { NetworkUserConfig } from 'hardhat/types';
-
 import { recoverColdWallet } from './tools/secretShares';
 // Ensure that we have all the environment variables we need.
 const mnemonic = recoverColdWallet();
@@ -26,28 +24,6 @@ const chainIds = {
   fuji: 43113,
   hardhat: 31337,
 };
-
-function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
-  let config = {
-    accounts: {
-      count: 20,
-      mnemonic,
-      path: "m/44'/60'/0'/0",
-    },
-    chainId: chainIds[chain],
-    url: '',
-  };
-
-  switch (chain) {
-    case 'avalanche':
-      config.url = 'https://api.avax.network/ext/bc/C/rpc';
-      break;
-    case 'fuji':
-      config.url = 'https://api.avax-test.network/ext/bc/C/rpc';
-      break;
-  }
-  return config;
-}
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',

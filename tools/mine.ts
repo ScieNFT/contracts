@@ -1,12 +1,74 @@
-// use `npx hardhat run ...`
+// https://github.com/NomicFoundation/hardhat/issues/2175
+// `ts-node ...` doesn't work -- instead use `npx hardhat run`
 
 import hre from 'hardhat';
-import { BigNumber, BytesLike, utils } from 'ethers';
+
+import { Contract } from 'ethers';
+import { Tokens__factory } from '../types/factories/contracts/Tokens__factory';
+import type { Tokens as Tokens__contract } from '../types/contracts/Tokens';
+
+import { join } from 'path';
+import { readFileSync } from 'fs';
+
+import { BigNumber, BytesLike, utils, Wallet } from 'ethers';
 import { randomBytes } from 'crypto';
-import { deployAll } from '../scripts/deployment/deployAll';
-import { printBalances, checkBalances } from './checkWallets';
+
+import { keccak256 } from 'js-sha3';
 
 import process from 'process';
+
+let TOKENS: Tokens__contract;
+let USER: Wallet;
+
+export class Nonce {
+  static NONCE: number;
+
+  public static async resetNonce() {
+    let next = await USER.provider.getTransactionCount(USER.address, 'pending');
+    Nonce.NONCE = next;
+    console.log(`[NONCE] set first nonce to ${Nonce.NONCE}`);
+  }
+
+  public static async get() {
+    if (!Nonce.NONCE) {
+      await Nonce.resetNonce();
+    } else {
+      Nonce.NONCE += 1;
+      console.log(`[NONCE] providing nonce = ${Nonce.NONCE}`);
+    }
+    return { nonce: Nonce.NONCE };
+  }
+}
+
+export async function connect() {
+  // build signer
+
+  let m = process.env.USER_WALLET_MNEMONIC || '';
+
+  if (!m) {
+    console.error('Could not find USER_WALLET_MNEMONIC');
+    throw new Error('Please set USER_WALLET_MNEMONIC in the .env file');
+  }
+
+  let provider = (hre as any).ethers.provider;
+  USER = Wallet.fromMnemonic(m, `m/44'/60'/0'/0/0`).connect(provider);
+
+  // connect to the deployed tokens contract
+
+  let tokensFactory: Tokens__factory = <Tokens__factory>(
+    await hre.ethers.getContractFactory('Tokens', USER)
+  );
+
+  const config = hre.network.config;
+  let chainId = config.chainId ? config.chainId : '31337';
+  const content = readFileSync(join(__dirname, `../deployment.config.${chainId}.json`), 'utf-8');
+  let data = JSON.parse(content);
+  console.log(`Using existing Tokens Contract @ ${data.tokensAddress}`);
+
+  TOKENS = <Tokens__contract>new Contract(data.tokensAddress, tokensFactory.interface, USER);
+
+  console.log(`>>> Tokens Address = ${TOKENS.address}`);
+}
 
 const chainId = `${hre.network.config.chainId}` || '31337';
 const snowtrace =
@@ -16,10 +78,6 @@ const snowtrace =
     ? 'https://snowtrace.io/tx/'
     : '';
 
-import { Nonce, Signers, Contracts } from '../scripts/deployment/deploy.service';
-
-import { keccak256 } from 'js-sha3';
-
 export async function mineSCI(tokensAddress: string, maximumMiningOperations: number) {
   if (!tokensAddress) {
     throw new Error('mineSCI requires Tokens from deploy.service');
@@ -27,22 +85,22 @@ export async function mineSCI(tokensAddress: string, maximumMiningOperations: nu
     console.log(`mining SCI for Tokens at ${tokensAddress}`);
   }
   // Mining SCI tokens
-  let miningFee = await Contracts.tokens.miningFee();
+  let miningFee = await TOKENS.miningFee();
   console.log(`miningFee = ${miningFee.toString()} [$]`);
 
-  let difficulty = await Contracts.tokens.difficulty();
+  let difficulty = await TOKENS.difficulty();
   console.log(`difficulty = ${difficulty.toString()} [zeroes]`);
 
-  let miningIntervalSeconds = await Contracts.tokens.miningIntervalSeconds();
+  let miningIntervalSeconds = await TOKENS.miningIntervalSeconds();
   console.log(`interval = ${miningIntervalSeconds.toString()} [sec]`);
 
   async function checkSolution(solution: BytesLike): Promise<BytesLike> {
     let solutionIterations = 0;
-    let done = await Contracts.tokens.isCorrect(solution);
+    let done = await TOKENS.isCorrect(solution);
     while (!done) {
       solutionIterations++;
       solution = randomBytes(32);
-      done = await Contracts.tokens.isCorrect(solution);
+      done = await TOKENS.isCorrect(solution);
     }
     if (solutionIterations > 0) {
       console.log(`checked ${solutionIterations} hashes against the contract`);
@@ -82,68 +140,6 @@ export async function mineSCI(tokensAddress: string, maximumMiningOperations: nu
     return solution;
   }
 
-  async function withdrawFeesToCEO() {
-    const gasBalanceCEO: BigNumber = await Signers.CEO.getBalance();
-    let remainingMiningCalls = gasBalanceCEO.div(miningFee);
-
-    function scaleGas(gas: BigNumber): string {
-      let microGas = gas.div(BigNumber.from(10).pow(12)); // scale down to microgas units
-      return (microGas.toNumber() / 1e6).toFixed(3);
-    }
-
-    console.log(
-      `CEO gas covers about ${remainingMiningCalls} mining operations (${scaleGas(
-        gasBalanceCEO
-      )}/${scaleGas(miningFee)})`
-    );
-
-    if (remainingMiningCalls.lt(2)) {
-      console.log(`withdrawing gas fees back to the CEO`);
-
-      const nonce = (await Nonce.CFO()).nonce;
-
-      let provider = (hre as any).ethers.provider;
-      const contractBalance = await provider.getBalance(Contracts.tokens.address);
-      let tx = await Contracts.tokens
-        .connect(Signers.CFO)
-        .withdraw(Signers.CEO.address, contractBalance, {
-          nonce: nonce,
-          gasLimit: 100000,
-        });
-
-      console.log(`tokens.withdraw ${snowtrace}${tx.hash}`);
-      await tx.wait();
-      const gasBalanceCEO: BigNumber = await Signers.CEO.getBalance();
-      console.log(`**        CEO @ ${Signers.CEO.address} has ${gasBalanceCEO} gas`);
-    }
-  }
-
-  // requisition 80% of the gas owned by the SUPERADMIN for mining (restore after with allocation script)
-  const gasBalanceSUPERADMIN = await Signers.SUPERADMIN.getBalance();
-
-  let originalGasPrice = await Signers.SUPERADMIN.provider.getGasPrice();
-  let gasPrice = originalGasPrice.mul(102).div(100);
-  let txFee = BigNumber.from(21000);
-
-  let gasToReserve = BigNumber.from('20000000000000000');
-
-  if (gasBalanceSUPERADMIN.gt(gasToReserve)) {
-    let gasToMove = gasBalanceSUPERADMIN.sub(gasToReserve);
-    if (gasToMove.gt(0)) {
-      console.log(`move ${gasToMove} gas from SUPERADMIN to CEO`);
-      const nonce = (await Nonce.SUPERADMIN()).nonce;
-      let tx = await Signers.SUPERADMIN.sendTransaction({
-        to: Signers.CEO.address,
-        value: gasToMove,
-        gasPrice: gasPrice,
-        gasLimit: txFee, // 21,000
-        nonce: nonce,
-      });
-      console.log(`transfer tx hash is ${tx.hash}`);
-      await tx.wait();
-    }
-  }
-
   let miningIterations = 0;
   let minimumMiningTimeMsec = miningIntervalSeconds * 1000;
   let totalMiningTimeMsec = 0;
@@ -153,20 +149,16 @@ export async function mineSCI(tokensAddress: string, maximumMiningOperations: nu
   while (miningIterations < maximumMiningOperations) {
     try {
       let start = Date.now();
-      let withdrawPromise = withdrawFeesToCEO();
-      let miningYieldPromise = Contracts.tokens.miningYield();
+
+      let miningYieldPromise = TOKENS.miningYield();
       let solutionPromise = checkSolution(predict(lastSolution));
-      let [miningYield, solution, _] = await Promise.all([
-        miningYieldPromise,
-        solutionPromise,
-        withdrawPromise,
-      ]);
+      let [miningYield, solution, _] = await Promise.all([miningYieldPromise, solutionPromise]);
       lastSolution = solution;
       console.log(`[${Date.now() - t0}] setup: ${Date.now() - start} msec`);
 
-      let tx = await Contracts.tokens.connect(Signers.CEO).mineSCI(solution, Signers.CFO.address, {
+      let tx = await TOKENS.connect(USER).mineSCI(solution, USER.address, {
         value: miningFee.toString(),
-        nonce: (await Nonce.CEO()).nonce,
+        nonce: (await Nonce.get()).nonce,
         gasLimit: 200000,
       });
 
@@ -177,7 +169,7 @@ export async function mineSCI(tokensAddress: string, maximumMiningOperations: nu
       console.log(`[${Date.now() - t0}] ${snowtrace}${tx.hash}  [ status ${receipt.status} ]`);
       console.log(
         `[${Date.now() - t0}] mined ${miningYield.div(BigNumber.from(10).pow(18))} SCI to ${
-          Signers.CFO.address
+          USER.address
         } (${miningIterations} of ${maximumMiningOperations})`
       );
 
@@ -214,28 +206,30 @@ export async function mineSCI(tokensAddress: string, maximumMiningOperations: nu
       }
     }
   }
-  let balance = await Contracts.tokens['balanceOf(address)'](Signers.CFO.address);
+  let balance = await TOKENS['balanceOf(address)'](USER.address);
   console.log(
-    `[${Date.now()}] mining is complete. CFO balance is now ${balance.div(
+    `[${Date.now()}] mining is complete. Your SCI balance is now ${balance.div(
       BigNumber.from(10).pow(18)
     )} SCI`
   );
 }
 
 async function main() {
-  let reuseOldContracts = true;
-  let skipSetup = true;
-  await deployAll(reuseOldContracts, skipSetup);
+  await connect();
+  let miningOperations = 1;
 
-  let miningOperations = 128;
+  let gasBalance = await USER.getBalance();
+  let sciBalance = await TOKENS['balanceOf(address)'](USER.address);
+  console.log(`Address ${USER.address}: ${gasBalance} attoAVAX, ${sciBalance} attoSCI`);
 
-  await mineSCI(Contracts.tokens.address, miningOperations).catch((error) => {
+  await mineSCI(TOKENS.address, miningOperations).catch((error) => {
     console.error(error);
     process.exitCode = 1;
   });
 
-  let balances = await checkBalances();
-  printBalances(`BALANCES AFTER ${miningOperations} MINING OPERATIONS`, balances);
+  gasBalance = await USER.getBalance();
+  sciBalance = await TOKENS['balanceOf(address)'](USER.address);
+  console.log(`Address ${USER.address}: ${gasBalance} attoAVAX, ${sciBalance} attoSCI`);
 }
 
 if (require.main === module) {
