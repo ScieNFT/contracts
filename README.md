@@ -15,6 +15,10 @@ A marketplace contract that holds ERC1155 NFTs for sale.
 
 A marketplace contract that holds fungible tokens on offer for an NFT.
 
+## Docgen and Metrics
+
+See https://scienft.github.io/contracts/#/ or https://scienft.github.io/contracts/#/metrics.html
+
 ## Running the Unit Tests
 
 You must first setup the deployment key shares in your .env file:
