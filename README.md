@@ -39,7 +39,7 @@ tests with hardhat.
 First, copy the sample file to a new .env file:
 
 ```shell
-cp .env.sample .env
+cp .env.example .env
 ```
 
 We use secret shares to store our deployment private key and wanted to include it here as an example
