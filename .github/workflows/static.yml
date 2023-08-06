@@ -32,13 +32,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Move metrics.html to docs directory
-        run: mv metrics.html docs/
+        run: mkdir ./doc/metrics && mv metrics.html ./doc/metrics/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          # Upload entire repository
           path: './doc'
       - name: Deploy to GitHub Pages
         id: deployment

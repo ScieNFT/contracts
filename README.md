@@ -29,7 +29,7 @@ A marketplace contract that holds fungible tokens on offer for an NFT.
 
 ## Docgen and Metrics
 
-See https://scienft.github.io/contracts/#/ or https://scienft.github.io/contracts/#/metrics.html
+See https://scienft.github.io/contracts/#/ or https://scienft.github.io/contracts/metrics/
 
 ## Running the Unit Tests
 
