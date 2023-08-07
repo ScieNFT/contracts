@@ -2,18 +2,6 @@
 
 This project contains the solidity contracts used by ScieNFT.
 
-These contracts were deployed to the Avalanche C-Chain on August 4, 2023.
-
-```json
-{
-  "tokensAddress": "0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47",
-  "offersAddress": "0x65841098e591baff9E931700bc5C5423d7E534d3",
-  "listingsAddress": "0xeAda9C401421C00623df426b11c83e126965e1bd",
-  "chainId": 43114,
-  "url": "https://api.avax.network/ext/bc/C/rpc"
-}
-```
-
 #### Tokens
 
 An ERC20 and ERC1155 compatible contract managing NFTs representing scientific work and the SCI
@@ -26,6 +14,22 @@ A marketplace contract that holds ERC1155 NFTs for sale.
 #### Offers
 
 A marketplace contract that holds fungible tokens on offer for an NFT.
+
+#### Avalanche C-Chain Addresses
+
+The contracts were deployed to the Avalanche C-Chain on August 4, 2023.
+
+```json
+{
+  "tokensAddress": "0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47",
+  "offersAddress": "0x65841098e591baff9E931700bc5C5423d7E534d3",
+  "listingsAddress": "0xeAda9C401421C00623df426b11c83e126965e1bd",
+  "chainId": 43114,
+  "url": "https://api.avax.network/ext/bc/C/rpc"
+}
+```
+
+#### Generated Documentation
 
 | Tool                  | Link                                                  |
 | --------------------- | ----------------------------------------------------- |
