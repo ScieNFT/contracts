@@ -27,8 +27,6 @@ A marketplace contract that holds ERC1155 NFTs for sale.
 
 A marketplace contract that holds fungible tokens on offer for an NFT.
 
-### Generated documentation and metrics
-
 | Tool                  | Link                                                  |
 | --------------------- | ----------------------------------------------------- |
 | hardhat-docgen        | [View](https://scienft.github.io/contracts/#/)        |
