@@ -66,10 +66,10 @@ async function main() {
 
   const k = 10000000000;
   const txFeeFloat = parseFloat(txFee.mul(k).div(oneAVAX).toString()) / k;
-  console.log(`The mining transaction gas fee is currenly ${txFeeFloat} AVAX per call.`);
+  console.log(`The mining transaction gas fee is currently ${txFeeFloat} AVAX per call.`);
 
   const miningFeeFloat = parseFloat(miningFee.mul(k).div(oneAVAX).toString()) / k;
-  console.log(`The mining fee is currenly ${miningFeeFloat} AVAX per call.`);
+  console.log(`The mining fee is currently ${miningFeeFloat} AVAX per call.`);
 
   const exchangeRateFloat = parseFloat(miningFee.add(txFee).mul(k).div(miningYield).toString()) / k;
   console.log(`The effective mining cost is ${exchangeRateFloat} AVAX/SCI\n`);
