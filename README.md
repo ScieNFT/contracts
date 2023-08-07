@@ -21,12 +21,11 @@ A marketplace contract that holds fungible tokens on offer for an NFT.
 
 The contracts were deployed to the Avalanche C-Chain on August 4, 2023.
 
-- **Tokens Address**:
-  [\`0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47\`](https://snowtrace.io/address/0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47)
-- **Offers Address**:
-  [\`0x65841098e591baff9E931700bc5C5423d7E534d3\`](https://snowtrace.io/address/0x65841098e591baff9E931700bc5C5423d7E534d3)
-- **Listings Address**:
-  [\`0xeAda9C401421C00623df426b11c83e126965e1bd\`](https://snowtrace.io/address/0xeAda9C401421C00623df426b11c83e126965e1bd)
+| Contract                                   | Address                                                                         |
+| ------------------------------------------ | ------------------------------------------------------------------------------- |
+| 0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47 | [View](https://snowtrace.io/address/xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47)  |
+| 0x65841098e591baff9E931700bc5C5423d7E534d3 | [View](https://snowtrace.io/address/0x65841098e591baff9E931700bc5C5423d7E534d3) |
+| 0xeAda9C401421C00623df426b11c83e126965e1bd | [View](https://snowtrace.io/address/0xeAda9C401421C00623df426b11c83e126965e1bd) |
 
 ### Generated Documentation
 
