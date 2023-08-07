@@ -29,7 +29,11 @@ A marketplace contract that holds fungible tokens on offer for an NFT.
 
 ### Generated documentation and metrics
 
-See https://scienft.github.io/contracts/#/ or https://scienft.github.io/contracts/metrics/
+| Tool                  | Link                                                  |
+| --------------------- | ----------------------------------------------------- |
+| hardhat-docgen        | [View](https://scienft.github.io/contracts/#/)        |
+| solidity-code-metrics | [View](https://scienft.github.io/contracts/metrics/)  |
+| solidity-coverage     | [View](https://scienft.github.io/contracts/coverage/) |
 
 ## Setting up the .env file to run tests
 

@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/TokensInterface.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> TokensInterface.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/0</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/0</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/0</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/0</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+&nbsp;
+interface TokensInterface {
+    /**
+     * @dev An onchain data record for scientific work
+     * @param adminHash An IPFS sha256 hex hash value that links to a JSON file providing
+     *                     (e.g. title, summary, authorship, files, checksums, etc.)
+     *
+     * If the NFT contains more than one IPFS hex hash link, then `content` is additionally a key
+     * value into the mapping that stores ContentNodes. One way to think about this is that we implicitly have:
+     *
+     *     *nextOwnerHash = map key @ keccak256(tokenId, ownerHash, ContentType.OWNER)
+     *     *nextAdminHash = map key @ keccak256(tokenId, adminHash, ContentType.ADMIN)
+     *
+     * available in the ScienceNFT struct (and similar implicit pointers in any ContentNode).
+     *
+     * Because ownerHash is always empty in a new NFT, we make a special key to access the head of
+     * the ownerContent list = keccak256(tokenId, adminHash, ContentType.OWNER)
+     *
+     * @param createdAt Unix epoch timestamp recording the priority date for the NFT
+     * @param attributes Efficient storage of flag bits and other information
+     */
+    struct ScienceNFT {
+        bytes32 adminHash;
+        uint64 createdAt;
+        uint192 attributes;
+    }
+&nbsp;
+    /**
+     * @dev A node used with a linked list of IPFS hex hashes that is storage-efficient in hashtable memory
+     *      ContentNodes are stored using a mapping where the key encodes the equivalent of the "next" pointer value.
+     *
+     * keccak256(tokenId, scienceNFTs[tokenId].(content hash), ContentType enum) --&gt; ContentNode
+     *
+     * Note that while we're using a linked list structure, it's not a traditional singly-linked list
+     * where each node explicitly stores the address of the next node. The first IPFS value (head) is stored in a ScienceNFT struct.
+     * If an IPFS hex hash value is the tail of the list, there is no matching key value in the hashtable (i.e., being the
+     * tail of the list is signified by a missing entry in the mapping). The next value's address is calculated when needed,
+     * and the value itself appears as the `contentHash` stored at the key's location in the map
+     *
+     * The key formula is needed to allow NFTs to store duplicate content. However we do not allow the same content hash to appear
+     * twice within a single NFT content list.
+     *
+     * @param contentHash A CIDv1 IPFS sha256 hex hash.
+     *                    We are at the tail of the list when there is no entry in the mapping for a key built from the hash
+     * @param createdAt Unix epoch timestamp recording the priority date for the content (i.e. key value)
+     * @param tokenId The token that owns this node (allows us to look up Admin and Owner addresses for permission checks)
+     *                - If tokenId is zero, then no node exists in the mapping for the provided key value
+     *                - By returning to the ScienceNFT record and traversing lists, we can find `next` and `prev` hash values
+     */
+    struct ContentNode {
+        bytes32 contentHash;
+        uint64 createdAt;
+        uint64 tokenId;
+    }
+&nbsp;
+    /**
+     * @dev We will indicate which list is of interest with an enum
+     * @note Adding fields to this enum will break things
+     **/
+    enum ContentType {
+        OWNER,
+        ADMIN
+    }
+&nbsp;
+    // Events
+    event MintingFeeSet(uint256 mintingFee);
+    event MiningFeeSet(uint256 miningFee);
+    event DifficultySet(uint8 difficulty);
+    event MiningIntervalSet(uint32 interval);
+    event NFTUpdated(
+        uint64 indexed tokenId,
+        uint192 attributes,
+        address indexed owner,
+        address admin,
+        address indexed beneficiary
+    );
+    event AdminContentNodeCreated(
+        uint64 indexed tokenId,
+        bytes32 indexed data,
+        bytes32 indexed prev
+    );
+    event OwnerContentNodeCreated(
+        uint64 indexed tokenId,
+        bytes32 indexed data,
+        bytes32 indexed prev
+    );
+    event MarketplaceSale(
+        uint64 indexed tokenId,
+        uint64 soldAt,
+        address indexed buyer,
+        uint256 price,
+        address seller,
+        address indexed beneficiary,
+        uint256 royalty
+    );
+&nbsp;
+    // NFT Database Management
+    function mintNFT(bytes32 data) external payable;
+&nbsp;
+    function mintNFT(
+        bytes32 data,
+        uint192 attributes,
+        address owner,
+        address admin,
+        address beneficiary
+    ) external payable;
+&nbsp;
+    function superadminMintNFT(
+        bytes32 data,
+        uint64 createdAt,
+        uint192 attributes,
+        address owner,
+        address admin,
+        address beneficiary
+    ) external;
+&nbsp;
+    function setAdmin(uint64 tokenId, address newAdmin) external;
+&nbsp;
+    function setBeneficiary(uint64 tokenId, address newBeneficiary) external;
+&nbsp;
+    function reportMarketplaceSale(
+        uint64 tokenId,
+        uint64 soldAt,
+        address buyer,
+        uint256 price,
+        address seller,
+        address beneficiary,
+        uint256 royalty
+    ) external;
+&nbsp;
+    // NFT Content Management
+    function appendContent(
+        uint64 tokenId,
+        bytes32 contentHash,
+        ContentType contentType
+    ) external payable;
+&nbsp;
+    function superadminAppendContent(
+        uint64 tokenId,
+        bytes32 contentHash,
+        ContentType contentType,
+        uint64 createdAt
+    ) external;
+&nbsp;
+    // NFT Database and Content Queries
+    function isMinted(uint64 tokenId) external view returns (bool);
+&nbsp;
+    function getContentNodeKey(
+        uint64 tokenId,
+        bytes32 contentHash,
+        ContentType contentType
+    ) external pure returns (bytes32);
+&nbsp;
+    function getAdjacentContent(
+        uint64 tokenId,
+        bytes32 contentHash,
+        ContentType contentType
+    ) external view returns (bytes32 prevContentHash, bytes32 nextContentHash);
+&nbsp;
+    // NFT Status Bit Queries
+    function isBlocklisted(uint64 tokenId) external view returns (bool);
+&nbsp;
+    function isFullBenefit(uint64 tokenId) external view returns (bool);
+&nbsp;
+    function willUnsetFullBenefit(uint64 tokenId) external view returns (bool);
+&nbsp;
+    function isBridged(uint64 tokenId) external view returns (bool);
+&nbsp;
+    // NFT Status Bit Control
+&nbsp;
+    function blocklist(uint64 tokenId, bool value) external;
+&nbsp;
+    function setFullBenefitFlag(uint64 tokenId, bool value) external;
+&nbsp;
+    function setAttributes(uint64 tokenId, uint192 newAttributes) external;
+&nbsp;
+    // Transfer of NFTs to and from bridge contracts.
+    function withdrawFromContract(uint64 tokenId, address bridge) external;
+&nbsp;
+    function restoreToContract(
+        uint64 tokenId,
+        uint192 attributes,
+        address owner,
+        address admin,
+        address beneficiary
+    ) external;
+&nbsp;
+    // Mining SCI tokens
+    function setMiningInterval(uint32 newIntervalSeconds) external;
+&nbsp;
+    function setDifficulty(uint8 newDifficulty) external;
+&nbsp;
+    function isCorrect(bytes32 solution) external view returns (bool);
+&nbsp;
+    function mineSCI(bytes32 solution, address to) external payable;
+&nbsp;
+    // Destroying SCI Tokens
+    function burn(uint256 amount) external;
+&nbsp;
+    // Fee Management
+    /**
+     * @dev Fees are paid in gas tokens / gwei
+     */
+    function setMintingFee(uint256 newMintingFee) external;
+&nbsp;
+    function setMiningFee(uint256 newMiningFee) external;
+&nbsp;
+    function withdraw(address payable to, uint256 value) external;
+&nbsp;
+    function withdrawSCI(address to, uint256 value) external;
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Aug 07 2023 12:18:01 GMT+0300 (GMT+03:00)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
