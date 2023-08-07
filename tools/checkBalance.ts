@@ -41,15 +41,15 @@ export async function connect() {
   console.log(`Using existing Tokens Contract @ ${data.tokensAddress}`);
 
   TOKENS = <Tokens__contract>new Contract(data.tokensAddress, tokensFactory.interface, USER);
-
-  console.log(`>>> Tokens Address = ${TOKENS.address}`);
 }
 
 async function main() {
   await connect();
   const gasBalance = await USER.getBalance();
   const sciBalance = await TOKENS['balanceOf(address)'](USER.address);
-  console.log(`Address ${USER.address}: ${gasBalance} attoAVAX, ${sciBalance} attoSCI`);
+  console.log(
+    `address ${USER.address} controls ${gasBalance} attoAVAX and ${sciBalance} attoSCI\n`
+  );
 
   // report on current mining yield
   const miningYield = await TOKENS.miningYield();
@@ -71,8 +71,22 @@ async function main() {
   const miningFeeFloat = parseFloat(miningFee.mul(k).div(oneAVAX).toString()) / k;
   console.log(`The mining fee is currenly ${miningFeeFloat} AVAX per call.`);
 
-  const exchangeRate = parseFloat(miningFee.add(txFee).mul(k).div(miningYield).toString()) / k;
-  console.log(`The effective mining cost is ${exchangeRate} AVAX/SCI `);
+  const exchangeRateFloat = parseFloat(miningFee.add(txFee).mul(k).div(miningYield).toString()) / k;
+  console.log(`The effective mining cost is ${exchangeRateFloat} AVAX/SCI\n`);
+
+  const totalSupply = await TOKENS.totalSupply();
+  const totalSupplyFloat = parseFloat(totalSupply.mul(k).div(oneAVAX).toString()) / k;
+
+  const maxSupply = await TOKENS.maxTotalSupply();
+  const maxSupplyFloat = parseFloat(maxSupply.mul(k).div(oneAVAX).toString()) / k;
+  const minedPercent = ((totalSupplyFloat / maxSupplyFloat) * 100).toFixed(1);
+
+  console.log(
+    `To date ${totalSupplyFloat} of ${maxSupplyFloat} SCI have been mined (${minedPercent}%)`
+  );
+  console.log(
+    `Mining implies a current market cap of ${totalSupplyFloat * exchangeRateFloat} AVAX`
+  );
 }
 
 if (require.main === module) {
