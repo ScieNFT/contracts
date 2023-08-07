@@ -1,6 +1,8 @@
 # ScieNFT Blockchain Contracts
 
-This project contains the solidity contracts used by ScieNFT.
+The ScieNFT contracts serve as the backbone of our decentralized preprint server, enabling the
+minting, trading, and management of NFTs representing scientific work. This repository contains the
+core smart contracts and some utility scripts for interacting with them.
 
 #### Tokens
 
@@ -15,21 +17,18 @@ A marketplace contract that holds ERC1155 NFTs for sale.
 
 A marketplace contract that holds fungible tokens on offer for an NFT.
 
-#### Avalanche C-Chain Addresses
+### Avalanche C-Chain Addresses
 
 The contracts were deployed to the Avalanche C-Chain on August 4, 2023.
 
-```json
-{
-  "tokensAddress": "0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47",
-  "offersAddress": "0x65841098e591baff9E931700bc5C5423d7E534d3",
-  "listingsAddress": "0xeAda9C401421C00623df426b11c83e126965e1bd",
-  "chainId": 43114,
-  "url": "https://api.avax.network/ext/bc/C/rpc"
-}
-```
+- **Tokens Address**:
+  [\`0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47\`](https://snowtrace.io/address/0xBefD8dDC159ABAa4A4B7E1B8B77ed1171B26Ab47)
+- **Offers Address**:
+  [\`0x65841098e591baff9E931700bc5C5423d7E534d3\`](https://snowtrace.io/address/0x65841098e591baff9E931700bc5C5423d7E534d3)
+- **Listings Address**:
+  [\`0xeAda9C401421C00623df426b11c83e126965e1bd\`](https://snowtrace.io/address/0xeAda9C401421C00623df426b11c83e126965e1bd)
 
-#### Generated Documentation
+### Generated Documentation
 
 | Tool                  | Link                                                  |
 | --------------------- | ----------------------------------------------------- |
@@ -75,7 +74,7 @@ secret shares define.
 
 ## Running the Unit Tests
 
-To run the unit tests on the contracts:
+Ensure the integrity and correctness of the contracts by running the unit tests:
 
 ```shell
 yarn install
@@ -84,7 +83,7 @@ yarn run test
 
 To report coverage, use `yarn run coverage`.
 
-## Setting up the .env file to run tests
+## Setting up the .env file to mine SCI tokens
 
 You must supply the private key for the account you want to use with the mining scripts. If you
 copied the `env.example` file you can edit the value for `USER_WALLET_MNEMONIC` to your preferred
@@ -99,7 +98,7 @@ npx ts-node ./tools/newWallet.ts
 If you have a hex private key, you should be able to slightly modify this script to change it to a
 set of mnemonic words.
 
-## Mining SCI Tokens
+## Mining SCI tokens
 
 To mine SCI tokens, provide your private key mnemonic to your `.env` file and run the mining script:
 
