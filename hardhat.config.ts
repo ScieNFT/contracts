@@ -9,8 +9,6 @@ dotenv.config({ path: './.env' });
 
 import 'hardhat-gas-reporter';
 import 'hardhat-docgen';
-import 'hardhat-abi-exporter';
-
 import '@typechain/hardhat';
 import '@nomiclabs/hardhat-ethers';
 import 'solidity-coverage';
@@ -27,6 +25,15 @@ const chainIds = {
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
+  gasReporter: {
+    currency: 'USD',
+    enabled: true,
+    gasPrice: 25,
+    token: 'AVAX',
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY || '',
+    excludeContracts: [],
+    src: './contracts',
+  },
   networks: {
     avalanche: {
       accounts: {
@@ -79,6 +86,7 @@ const config: HardhatUserConfig = {
   },
   docgen: {
     path: './doc',
+    except: ['mock/*'],
     clear: true,
     runOnCompile: true,
   },
