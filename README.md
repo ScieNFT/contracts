@@ -21,7 +21,7 @@ A marketplace contract that holds fungible tokens on offer for an NFT.
 
 The contracts were deployed to the Avalanche C-Chain on August 4, 2023.
 
-| Contract Name | Contract Address                           | Address                                                                         |
+| Contract Name | Contract Address                           | Link                                                                            |
 | ------------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
 | Tokens        | 0xbefd8ddc159abaa4a4b7e1b8b77ed1171b26ab47 | [View](https://snowtrace.io/address/0xbefd8ddc159abaa4a4b7e1b8b77ed1171b26ab47) |
 | Offers        | 0x65841098e591baff9e931700bc5c5423d7e534d3 | [View](https://snowtrace.io/address/0x65841098e591baff9e931700bc5c5423d7e534d3) |
